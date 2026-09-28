@@ -37,5 +37,17 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // Node scripts (play-test).
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+      },
+    },
+  },
   prettier,
 );
