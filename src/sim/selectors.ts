@@ -227,6 +227,96 @@ export function reckoning(state: GameState) {
   return state.reckoning ? structuredClone(state.reckoning) : null;
 }
 
+// ---------------------------------------------------------------- rail manifests
+
+export interface ManifestEntry {
+  /** Week of the quarter (1..13) on which the wagons arrived or departed. */
+  week: number;
+  tick: number;
+  from: string;
+  to: string;
+  good: GoodId;
+  qty: number;
+}
+
+/**
+ * The railway's own record of what moved through one place in the last completed quarter.
+ * Trains are public, so this is honest; it is not a manager's claim. It shows rail movements
+ * only, never stock on hand or what was diverted by road.
+ */
+export interface Manifest {
+  target: LocationRef;
+  targetName: string;
+  /** The completed quarter this covers (0 before the first quarter has been played). */
+  quarter: number;
+  arrivals: ManifestEntry[];
+  departures: ManifestEntry[];
+  arrivedTotal: Stock;
+  departedTotal: Stock;
+}
+
+const nodeName = (node: string): string => {
+  if (node === 'centre') return 'the Centre';
+  if (node.startsWith('ent:')) return ENTERPRISES[node.slice(4) as EnterpriseId]?.name ?? node;
+  return TOWNS[node.slice(5) as TownId]?.name ?? node;
+};
+
+const nodeOf = (ref: LocationRef): string =>
+  ref.type === 'enterprise' ? `ent:${ref.id}` : `town:${ref.id}`;
+
+const zeroStock = (): Stock => ({ grain: 0, steel: 0, tractors: 0, consumer: 0 });
+
+/**
+ * Manifests for every enterprise and town covering the last completed quarter: shipments that
+ * arrived or departed there. At the desk that is the quarter just run; while planning or during
+ * a live quarter it is the one before.
+ */
+export function manifests(state: GameState): Manifest[] {
+  const completed = state.phase === 'desk' ? state.quarter : state.quarter - 1;
+  const end = state.phase === 'desk' ? state.tick : state.tick - state.week;
+  const start = end - B.TICKS_PER_QUARTER;
+  const inWindow = (t: number): boolean => completed >= 1 && t > start && t <= end;
+  const shipments = [...state.arrived, ...state.shipments];
+
+  const refs: LocationRef[] = [
+    ...ENTERPRISE_IDS.map((id) => ({ type: 'enterprise', id }) as LocationRef),
+    ...TOWN_IDS.map((id) => ({ type: 'town', id }) as LocationRef),
+  ];
+  return refs.map((target) => {
+    const node = nodeOf(target);
+    const entry = (s: GameState['shipments'][number], tick: number): ManifestEntry => ({
+      week: tick - start,
+      tick,
+      from: nodeName(s.from),
+      to: nodeName(s.to),
+      good: s.good,
+      qty: round1(s.qty),
+    });
+    // In-flight shipments have not arrived yet, so only departures can come from them.
+    const arrivals = state.arrived
+      .filter((s) => s.to === node && inWindow(s.arriveTick))
+      .map((s) => entry(s, s.arriveTick))
+      .sort((a, b) => a.tick - b.tick);
+    const departures = shipments
+      .filter((s) => s.from === node && inWindow(s.departTick))
+      .map((s) => entry(s, s.departTick))
+      .sort((a, b) => a.tick - b.tick);
+    const arrivedTotal = zeroStock();
+    const departedTotal = zeroStock();
+    for (const a of arrivals) arrivedTotal[a.good] += a.qty;
+    for (const d of departures) departedTotal[d.good] += d.qty;
+    return {
+      target,
+      targetName: locationName(target),
+      quarter: Math.max(0, completed),
+      arrivals,
+      departures,
+      arrivedTotal: roundStock(arrivedTotal),
+      departedTotal: roundStock(departedTotal),
+    };
+  });
+}
+
 // ---------------------------------------------------------------- observers, audits, reports
 
 export interface ObserverFinding {
@@ -310,6 +400,8 @@ export interface PublicReport {
     observerSlip: ObserverFinding | null;
     /** Result of an earlier audit of this enterprise, if it has come back. */
     audit: AuditView | null;
+    /** The railway's record of shipments in and out of this enterprise this quarter. */
+    manifest: Manifest | null;
   };
 }
 
@@ -345,6 +437,10 @@ function publicReport(state: GameState, r: GameState['reports'][number]): Public
         : null,
       observerSlip: slip ?? null,
       audit: audit ?? null,
+      manifest:
+        manifests(state).find(
+          (m) => m.target.type === 'enterprise' && m.target.id === r.enterprise,
+        ) ?? null,
     },
   };
 }

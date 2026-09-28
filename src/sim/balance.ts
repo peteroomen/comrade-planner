@@ -73,7 +73,7 @@ export const GRAIN_SPOIL_RATE = 0.03; // share of stored grain that spoils each 
 export const SHIP_MIN_QTY = 0.5; // shipments smaller than this are held back
 export const CENTRE_STEEL_BASE = 9; // steel the Centre ships in per tick at Centre bar 50
 export const CENTRE_STEEL_GAIN = 0.9; // how strongly Centre bar scales steel imports
-export const ARRIVED_KEEP_TICKS = 13; // how long finished shipments are remembered for return legs
+export const ARRIVED_KEEP_TICKS = 26; // how long finished shipments are remembered: return legs, and rail manifests for the last quarter
 
 // ---- black market and shadow
 export const DISTILLERY_OUTPUT = 4; // consumer units the distillery makes per tick at Shadow 50

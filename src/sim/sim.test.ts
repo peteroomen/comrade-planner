@@ -17,6 +17,7 @@ import {
   activeCard,
   bars,
   deskReports,
+  manifests,
   observerFindings,
   pendingReports,
   pins,
@@ -333,6 +334,76 @@ describe('observers and visibility', () => {
       s.bars.apparatus = 20;
     }
     expect(found).toBe(true);
+  });
+});
+
+describe('rail manifests', () => {
+  const run = (skimmer: boolean) => {
+    const s = newGame(5);
+    s.managers.kolos.honesty = skimmer ? 0 : 1;
+    s.managers.kolos.greed = skimmer ? 1 : 0;
+    return playQuarterToDesk(s);
+  };
+  const kolos = (s: GameState) => {
+    const m = manifests(s).find((x) => x.target.type === 'enterprise' && x.target.id === 'kolos')!;
+    const r = deskReports(s).find((x) => x.enterprise === 'kolos')!;
+    return { m, r };
+  };
+
+  it('records what really arrived and departed, covering the last completed quarter', () => {
+    const s = run(false);
+    expect(s.phase).toBe('desk');
+    const all = manifests(s);
+    expect(all).toHaveLength(ENTERPRISE_IDS.length + 3);
+    const krasny = all.find((x) => x.target.type === 'enterprise' && x.target.id === 'krasny')!;
+    expect(krasny.quarter).toBe(s.quarter);
+    expect(krasny.arrivals.some((a) => a.good === 'steel')).toBe(true);
+    for (const e of all.flatMap((m) => [...m.arrivals, ...m.departures])) {
+      expect(e.week).toBeGreaterThanOrEqual(1);
+      expect(e.week).toBeLessThanOrEqual(13);
+    }
+    // Still the same quarter's record while the player plans the next one, and empty before any.
+    expect(manifests(newGame(1)).every((m) => m.arrivals.length + m.departures.length === 0)).toBe(
+      true,
+    );
+    const next = endQuarter(s);
+    expect(manifests(next)).toEqual(manifests(s));
+  });
+
+  it('shows a skimming manager reporting more output than left the gate by rail', () => {
+    const honest = kolos(run(false));
+    const skim = kolos(run(true));
+    // The honest manager's report matches what the railway carried away (within held-back crumbs).
+    expect(honest.r.reportedOutput - honest.m.departedTotal.grain).toBeLessThan(
+      honest.r.reportedOutput * 0.06 + 1,
+    );
+    // The skimmer reports output that never travelled.
+    expect(skim.r.reportedOutput).toBeGreaterThan(skim.m.departedTotal.grain * 1.15);
+  });
+
+  it('shows reported input use above manifested steel arrivals for a skimming factory', () => {
+    let s = newGame(5);
+    s.managers.zarya.honesty = 0;
+    s.managers.zarya.greed = 1;
+    // No opening steel store, and most steel goes to Krasny, so every tonne Zarya uses came by rail.
+    s.enterprises.zarya.stock.steel = 0;
+    const plan = defaultPlan();
+    plan.steelKrasnyShare = 0.9;
+    s = setPlan(s, plan);
+    let guard = 0;
+    while (s.phase === 'quarter' && guard++ < 100) {
+      s = s.activeCard ? chooseCard(s, s.activeCard.cardId, 'right') : tick(s);
+    }
+    const m = manifests(s).find((x) => x.target.type === 'enterprise' && x.target.id === 'zarya')!;
+    const r = deskReports(s).find((x) => x.enterprise === 'zarya')!;
+    expect(m.arrivedTotal.steel).toBeGreaterThan(0);
+    expect(r.reportedInputs).toBeGreaterThan(m.arrivedTotal.steel);
+  });
+
+  it('never exposes hidden fields', () => {
+    const blob = JSON.stringify(manifests(run(true)));
+    for (const key of ['honesty', 'greed', 'skim', 'truth', 'warehouse'])
+      expect(blob).not.toContain(`"${key}"`);
   });
 });
 
