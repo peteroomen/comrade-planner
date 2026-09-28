@@ -1,0 +1,425 @@
+/* App column, header, bars, title, reckoning, epitaph */
+
+.app {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--col);
+  height: 100dvh;
+  margin: 0 auto;
+  background: var(--paper);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px #000,
+    0 0 40px rgb(0 0 0 / 0.55);
+}
+
+.app[data-screen='desk'] {
+  background: var(--desk);
+  color: var(--paper);
+}
+
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen {
+  overflow-y: auto;
+}
+
+/* ---- header and bars */
+
+.header {
+  flex: 0 0 auto;
+  padding: 8px 14px 6px;
+  background: var(--paper-2);
+  border-bottom: 2px solid var(--ink);
+  background-image: linear-gradient(var(--paper-hi), var(--paper-2));
+  z-index: 5;
+}
+.app[data-screen='desk'] .header {
+  background: #201d19;
+  border-bottom-color: #000;
+  color: var(--paper);
+}
+
+.bars {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.bar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+}
+.bar-dot {
+  align-self: center;
+  width: 9px;
+  height: 9px;
+  margin-bottom: 2px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  transition: all 120ms ease;
+}
+.bar-dot-hint {
+  border-color: var(--red);
+  background: transparent;
+}
+.bar-dot-lean {
+  border-color: var(--red);
+  background: var(--red);
+  transform: scale(1.25);
+}
+.bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-head);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+.app[data-screen='desk'] .bar-label {
+  color: var(--paper);
+}
+.bar-num {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 3px;
+  font-family: var(--font-type);
+}
+.bar-num b {
+  font-size: 20px;
+}
+.bar-num small {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.bar-track {
+  position: relative;
+  height: 11px;
+  border: 1.5px solid var(--ink);
+  background:
+    linear-gradient(90deg, transparent 0 11%, transparent 11% 89%, transparent 89% 100%),
+    var(--paper-hi);
+  overflow: hidden;
+}
+.app[data-screen='desk'] .bar-track {
+  border-color: var(--paper);
+  background: #3b362f;
+}
+/* the two deadly ends */
+.bar-track::before,
+.bar-track::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 11%;
+  background: repeating-linear-gradient(135deg, var(--red) 0 2px, transparent 2px 5px);
+  opacity: 0.85;
+  z-index: 2;
+}
+.bar-track::before {
+  left: 0;
+  border-right: 1px solid var(--red);
+}
+.bar-track::after {
+  right: 0;
+  border-left: 1px solid var(--red);
+}
+.bar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--ink);
+  transition: width 900ms cubic-bezier(0.3, 0.7, 0.2, 1);
+  z-index: 1;
+}
+.app[data-screen='desk'] .bar-fill {
+  background: var(--paper);
+}
+.bar-danger .bar-fill {
+  background: var(--red);
+}
+.bar-mid {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--paper);
+  opacity: 0.7;
+  z-index: 3;
+}
+
+.phase-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 6px;
+  font-family: var(--font-head);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 13px;
+}
+.phase-name {
+  font-weight: 700;
+  color: var(--red);
+}
+.app[data-screen='desk'] .phase-name {
+  color: #e8574d;
+}
+.phase-detail {
+  font-weight: 400;
+  color: var(--ink-2);
+}
+.app[data-screen='desk'] .phase-detail {
+  color: #cdbf9f;
+}
+
+/* ---- footer controls on the map */
+
+.footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  background: var(--paper-2);
+  background-image: linear-gradient(var(--paper-2), var(--paper-3));
+  border-top: 2px solid var(--ink);
+  z-index: 5;
+}
+.footer-plan {
+  justify-content: space-between;
+}
+.footer-hint {
+  flex: 1;
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.25;
+}
+.observer-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-family: var(--font-head);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.slot {
+  display: inline-block;
+  width: 14px;
+  height: 18px;
+  border: 1.5px solid var(--ink);
+  background: transparent;
+}
+.slot-on {
+  background: var(--red);
+}
+.btn-begin {
+  flex: 0 0 auto;
+  min-width: 152px;
+}
+.footer-live {
+  justify-content: space-between;
+}
+.btn-ctl {
+  min-width: 92px;
+  padding: 0 14px;
+}
+.btn-ctl[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--paper-hi);
+}
+.weeks {
+  flex: 1;
+  display: flex;
+  gap: 3px;
+}
+.wk {
+  flex: 1;
+  height: 14px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper-hi);
+}
+.wk-done {
+  background: var(--ink);
+}
+
+/* ---- title, reckoning, epitaph */
+
+.title {
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 24px;
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    var(--paper-hi),
+    var(--paper) 55%,
+    var(--paper-3)
+  );
+}
+.title-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+.title h1 {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 44px;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.title-sub {
+  font-family: var(--font-type);
+  font-size: 18px;
+  color: var(--red);
+  font-style: italic;
+}
+.title-steps {
+  text-align: left;
+  counter-reset: s;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 8px 0 2px;
+}
+.title-steps li {
+  counter-increment: s;
+  position: relative;
+  padding-left: 34px;
+  font-size: 15.5px;
+}
+.title-steps li::before {
+  content: counter(s);
+  position: absolute;
+  left: 0;
+  top: -1px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-head);
+  font-weight: 600;
+}
+.title-rule {
+  font-size: 14.5px;
+  color: var(--ink-2);
+  border-top: 1px solid var(--ink);
+  padding-top: 10px;
+}
+
+.reckoning,
+.epitaph {
+  padding: 18px 16px;
+  background: var(--desk);
+  overflow-y: auto;
+  justify-content: center;
+}
+.paper-sheet {
+  background: var(--paper);
+  padding: 22px 20px 20px;
+  border: 1px solid #000;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgb(255 255 255 / 0.5), transparent 60%),
+    linear-gradient(var(--paper), var(--paper-2));
+}
+.kicker {
+  font-family: var(--font-head);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 13px;
+  color: var(--red);
+  font-weight: 600;
+}
+.sheet-title {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1.05;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.reckon-bars {
+  padding: 10px 0 2px;
+  border-top: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 12px;
+}
+.reckon-bars .bars {
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 18px;
+}
+.reckon-bars .bar-label {
+  font-size: 13px;
+}
+.reckon-bars .bar-track {
+  height: 14px;
+}
+.reckon-bars .bar-dot {
+  display: none;
+}
+.reckon-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 16px;
+}
+.reckon-lines li {
+  padding-left: 16px;
+  position: relative;
+}
+.reckon-lines li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 7px;
+  height: 7px;
+  background: var(--red);
+}
+.epitaph-card {
+  align-items: flex-start;
+}
+.epitaph-body {
+  font-size: 17px;
+  line-height: 1.5;
+}
+.epitaph-served {
+  font-family: var(--font-type);
+  font-size: 16px;
+  border-top: 1px dashed var(--ink);
+  border-bottom: 1px dashed var(--ink);
+  padding: 8px 0;
+  width: 100%;
+}
+.epitaph .btn {
+  align-self: stretch;
+}

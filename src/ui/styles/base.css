@@ -1,0 +1,146 @@
+:root {
+  --paper: #efe6d2;
+  --paper-2: #e6dac0;
+  --paper-3: #d8c9a6;
+  --paper-hi: #f6efdb;
+  --ink: #1c1a17;
+  --ink-2: #4a4238;
+  --ink-3: #6b6153;
+  --red: #b3261e;
+  --red-dark: #8c1c16;
+  --desk: #2a2621;
+  --desk-2: #34302a;
+  --wagon-grain: #c08f2e;
+  --wagon-steel: #4e6577;
+  --wagon-tractors: #6b7b3f;
+  --wagon-consumer: #8e5b70;
+
+  --font-head:
+    'Oswald', 'Arial Narrow', 'Liberation Sans Narrow', 'DejaVu Sans Condensed', sans-serif;
+  --font-type: 'Courier Prime', 'Courier New', Courier, monospace;
+  --font-body: 'Source Serif 4', 'Source Serif Pro', Georgia, 'DejaVu Serif', serif;
+
+  --col: 480px;
+  --tap: 48px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--desk);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+dl,
+dd {
+  margin: 0;
+  padding: 0;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 2px;
+}
+
+.btn {
+  min-height: var(--tap);
+  padding: 0 20px;
+  border: 2px solid var(--ink);
+  background: var(--paper-hi);
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 80ms ease;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn-red {
+  background: var(--red);
+  border-color: var(--ink);
+  color: var(--paper-hi);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.btn-ink {
+  background: var(--ink);
+  color: var(--paper-hi);
+}
+.btn-outline {
+  background: var(--paper-hi);
+}
+.btn-big {
+  min-height: 56px;
+  font-size: 19px;
+  width: 100%;
+}
+
+.icon-btn {
+  width: var(--tap);
+  height: var(--tap);
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--ink);
+  background: var(--paper-hi);
+  color: var(--ink);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Reduced motion: nothing slides, types, drifts or pulses. Elements rest in their final state. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .map-svg.running .puff {
+    opacity: 0.85;
+  }
+  .map-svg.running .foot {
+    opacity: 0.6;
+  }
+}
