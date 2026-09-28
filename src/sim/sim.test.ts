@@ -25,20 +25,25 @@ import {
 import { naiveDriver, playQuarter, playQuarters, randomDriver } from './test-utils';
 import type { GameState } from './types';
 
-const totalTicks = (s: GameState): number => s.tick;
-
 describe('money and stocks', () => {
   it('conserves money over 200 ticks with random valid inputs', () => {
     const driver = randomDriver(99);
-    let s = newGame(7);
-    const total = s.ledger.total;
+    // Random play often ends a run early, so start a fresh game until 200 ticks have been played.
+    let played = 0;
+    let seed = 7;
     let guard = 0;
-    while (totalTicks(s) < 200 && s.phase !== 'ended' && guard++ < 40) {
-      s = playQuarter(s, driver);
-      assertConserved(s);
-      expect(s.ledger.total).toBe(total);
+    while (played < 200 && guard++ < 60) {
+      let s = newGame(seed++);
+      const total = s.ledger.total;
+      while (s.phase !== 'ended' && played < 200) {
+        const before = s.tick;
+        s = playQuarter(s, driver);
+        played += s.tick - before;
+        assertConserved(s);
+        expect(s.ledger.total).toBe(total);
+      }
     }
-    expect(totalTicks(s)).toBeGreaterThanOrEqual(13);
+    expect(played).toBeGreaterThanOrEqual(200);
   });
 
   it('never lets stocks or balances go negative', () => {
