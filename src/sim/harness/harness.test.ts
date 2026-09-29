@@ -29,10 +29,10 @@ describe('balance harness', () => {
 
   it('summarises censored runs', () => {
     const s = summarise([
-      { seed: 1, quarters: 2, cause: 'people-low' },
-      { seed: 2, quarters: 5, cause: 'centre-low' },
-      { seed: 3, quarters: 40, cause: 'survived' },
-      { seed: 4, quarters: 8, cause: 'people-low' },
+      { seed: 1, quarters: 2, cause: 'people-low', cardMove: 1, otherMove: 3, cardDeath: true },
+      { seed: 2, quarters: 5, cause: 'centre-low', cardMove: 1, otherMove: 3, cardDeath: false },
+      { seed: 3, quarters: 40, cause: 'survived', cardMove: 0, otherMove: 3, cardDeath: false },
+      { seed: 4, quarters: 8, cause: 'people-low', cardMove: 0, otherMove: 3, cardDeath: false },
     ]);
     expect(s.median).toBe(6.5);
     expect(s.deadByQ3).toBe(0.25);
@@ -40,10 +40,12 @@ describe('balance harness', () => {
     expect(s.survived).toBe(0.25);
     expect(s.histogram).toEqual({ 2: 1, 5: 1, 8: 1 });
     expect(s.causes['people-low']).toBeCloseTo(2 / 3);
+    expect(s.cardShare).toBeCloseTo(2 / 14);
+    expect(s.cardDeaths).toBeCloseTo(1 / 3);
   });
 
-  // Medians over the first 50 seeds sit at about 4, 6, 7.5 and 11.5 (300 seeds: 4, 6, 8, 13), so
-  // these margins hold with room to spare. The runs are deterministic per seed.
+  // Medians over the first 50 seeds sit at about 3, 6, 7 and 13 (300 seeds: 3, 6, 7, 14), so
+  // these margins hold. The runs are deterministic per seed.
   it('careful outlasts trusting outlasts naive outlasts random (median quarters)', () => {
     const median = (d: Parameters<typeof runArchetype>[0]) =>
       summarise(runArchetype(d, SEEDS)).median;

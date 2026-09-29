@@ -539,8 +539,8 @@ export function activeCard(state: GameState): ActiveCardView | null {
     type: card.type,
     character: { id: card.character, name: who?.name ?? card.character, title: who?.title ?? '' },
     text: card.text,
-    left: { label: card.left.label, hints: choiceHints(card.left, state.quarter) },
-    right: { label: card.right.label, hints: choiceHints(card.right, state.quarter) },
+    left: { label: card.left.label, hints: choiceHints(card.left) },
+    right: { label: card.right.label, hints: choiceHints(card.right) },
     target: card.tip ? card.tip.target : null,
     trackRecord: card.type === 'tip' && inf ? { right: inf.right, wrong: inf.wrong } : null,
   };

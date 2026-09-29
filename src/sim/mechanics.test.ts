@@ -153,7 +153,9 @@ describe('desk: rejecting', () => {
     expect(rejectHonest.chastened).toBe(0);
     const rejectPadded = after('reject', 1.4);
     const approvePadded = after('approve', 1.4);
-    expect(approvePadded.apparatus - rejectPadded.apparatus).toBeLessThan(2);
+    expect(approvePadded.apparatus - rejectPadded.apparatus).toBeLessThan(
+      B.APPARATUS_PADDED_APPROVE + B.APPARATUS_REJECT_PADDED + 0.5,
+    );
     expect(approvePadded.people).toBeCloseTo(rejectPadded.people, 5);
     expect(rejectPadded.chastened).toBe(1);
   });

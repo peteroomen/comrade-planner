@@ -43,7 +43,5 @@ export function driftBars(state: GameState): void {
   }
 }
 
-/** Multiplier on a card's direct bar effects in `quarter`: the deck grows more demanding with time. */
-export function cardScale(quarter: number): number {
-  return B.CARD_BAR_SCALE * (1 + B.CARD_RAMP * Math.max(0, quarter - 1));
-}
+/** Multiplier on a card's direct bar effects. Cards are pressure, not the main engine. */
+export const cardScale = (): number => B.CARD_BAR_SCALE;

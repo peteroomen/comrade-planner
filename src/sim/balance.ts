@@ -87,6 +87,10 @@ export const SKIM_HIDE_MIN = 0.02; // skim below this is treated as zero (petty 
 export const SKIM_TIP_THRESHOLD = 0.03; // skim above this makes a "skimming" tip true
 
 // ---- reports and distortion
+export const PEOPLE_YEAR_DRAG = 1.3; // People lost per quarter for each year elapsed (expectations rise)
+export const APPARATUS_YEAR_DRAG = 3.8; // Apparatus lost per quarter for each year elapsed (the machine wears)
+export const SHADOW_YEAR_GAIN = 1.8; // Shadow gained per quarter for each year elapsed (the black market matures)
+export const GREED_CREEP = 0.03; // greed every manager gains per quarter, until an audit catches them
 export const DISTORT_BASE = 0.12; // base output inflation for a fully dishonest manager
 export const DISTORT_GREED_GAIN = 0.35; // extra inflation per unit of greed
 export const DISTORT_APPARATUS_GAIN = 1.0; // multiplier slope: distortion * (1 + gain*(50-app)/50)
@@ -115,19 +119,19 @@ export const CENTRE_CHECK_INFLATE_GAIN = 2.5; // extra spot-check chance per uni
 // ---- bar coefficients (per quarter)
 export const PEOPLE_FED_TARGET = 0.97; // fed share that leaves People unchanged
 export const PEOPLE_FED_GAIN = 30; // People change per unit of fed share above target
-export const PEOPLE_CONSUMER_TARGET = 0.25; // consumer units per household per tick that is neutral
+export const PEOPLE_CONSUMER_TARGET = 0.28; // consumer units per household per tick that is neutral
 export const PEOPLE_CONSUMER_GAIN = 14; // People change per unit of consumer goods above neutral
-export const PEOPLE_WAGE_GAIN = 16; // People change per unit of (avg wage / fair wage - 1)
-export const PEOPLE_PRICE_GAIN = 10; // People loss per unit of average shop price above its default (gain when below)
+export const PEOPLE_WAGE_GAIN = 10; // People change per unit of (avg wage / fair wage - 1)
+export const PEOPLE_PRICE_GAIN = 15; // People loss per unit of average shop price above its default (gain when below)
 export const PEOPLE_UNPAID_GAIN = 25; // People loss per unit of unpaid wage share
-export const PEOPLE_QUEUE_GAIN = 6; // People loss per unit of share of ticks with queues
-export const APPARATUS_APPROVE = 2.0; // Apparatus gain per approved honest report (rubber-stamping breeds an untouchable Apparatus)
-export const APPARATUS_PADDED_APPROVE = 0.3; // Apparatus gain per approved padded report (a lie earns little thanks)
+export const PEOPLE_QUEUE_GAIN = 11; // People loss per unit of share of ticks with queues
+export const APPARATUS_APPROVE = 2.6; // Apparatus gain per approved honest report (rubber-stamping breeds an untouchable Apparatus)
+export const APPARATUS_PADDED_APPROVE = 2.1; // Apparatus gain per approved padded report (a lie earns little thanks)
 export const APPARATUS_REJECT_PADDED = 1.0; // Apparatus loss for rejecting a padded report (the right call, small cost)
-export const APPARATUS_REJECT_HONEST = 7.0; // Apparatus loss for rejecting an honest report
-export const PEOPLE_REJECT_HONEST = 2.0; // People loss when an honest report is rejected (the works resent being called liars)
-export const APPARATUS_AUDIT = 1.0; // Apparatus loss per audit launched
-export const APPARATUS_CAUGHT = 3.0; // extra Apparatus loss when an audit catches padding
+export const APPARATUS_REJECT_HONEST = 16.0; // Apparatus loss for rejecting an honest report
+export const PEOPLE_REJECT_HONEST = 4.0; // People loss when an honest report is rejected (the works resent being called liars)
+export const APPARATUS_AUDIT = 2.0; // Apparatus loss per audit launched
+export const APPARATUS_CAUGHT = 3.5; // extra Apparatus loss when an audit catches padding
 export const APPARATUS_AUDIT_CLEAN = 1.0; // extra Apparatus loss when an audit finds nothing (wasted inspector)
 export const CENTRE_AUDIT_CAUGHT = 2.5; // Centre gain when an audit catches padding
 export const SHADOW_AUDIT_CAUGHT = 3.0; // Shadow loss when an audit catches padding
@@ -135,10 +139,10 @@ export const AUDIT_CAUGHT_GREED_CUT = 0.15; // greed a manager loses after being
 export const APPARATUS_REQUEST_GRANTED = 0.05; // Apparatus gain per granted next-quarter request
 export const CENTRE_MEET_GAIN = 28; // Centre change per unit of (reported / target - 1)
 export const CENTRE_MEET_CAP = 0.5; // largest |reported / target - 1| the Centre counts
-export const CENTRE_CAUGHT_INFLATION = 62; // Centre loss per unit of own inflation when caught
+export const CENTRE_CAUGHT_INFLATION = 60; // Centre loss per unit of own inflation when caught
 export const SHADOW_UNMET_GAIN = 15; // Shadow gain per unit of unmet grain share
-export const SHADOW_BASE_GAIN = 1.2; // Shadow gain per quarter from the plain leakiness of a planned economy
-export const SHADOW_SKIM_GAIN = 18; // Shadow gain per unit of average skim share
+export const SHADOW_BASE_GAIN = 2.8; // Shadow gain per quarter from the plain leakiness of a planned economy
+export const SHADOW_SKIM_GAIN = 12; // Shadow gain per unit of average skim share
 export const SHADOW_FULL_SHOP_GAIN = 5; // Shadow loss per share of ticks with full shops
 export const SHADOW_TOLERATED_TIP = 3.0; // Shadow gain when the player dismisses a tip that was true
 export const QUEUE_THRESHOLD = 0.1; // share of a town's grain demand unmet that counts as a queue tick
@@ -158,7 +162,7 @@ export const OBSERVER_KEEP = 8; // observer records kept in state
 export const REPORTS_KEEP = 3; // quarters of reports kept in state
 
 // ---- ratchet and quotas
-export const CENTRE_TARGET_GROWTH = 0.035; // year-end: every target also rises by this share, whatever was reported (the plan must grow)
+export const CENTRE_TARGET_GROWTH = 0.046; // year-end: every target also rises by this share, whatever was reported (the plan must grow)
 export const RATCHET_BLEND = 0.6; // year-end: target moves this share toward reported average
 export const OWN_INFLATE_MIN = 1.0; // honest upward report
 export const OWN_INFLATE_MAX = 1.5; // maximum inflation of the upward report
@@ -168,14 +172,13 @@ export const QUOTA_MAX_SHARE = 2.0; // plan quota cap as a share of base quota
 // ---- card effect sizes
 export const RESERVE_GRAIN_START = 120; // province grain reserve at newGame
 export const CRACKDOWN_BLACK_CUT = 0.6; // share of black stock destroyed in a crackdown
-export const CARD_BAR_SCALE = 3.3; // multiplier on every card's direct bar effect (volatility of the card deck)
-export const CARD_RAMP = 0.105; // extra card effect scale per quarter played (the province grows more demanding)
+export const CARD_BAR_SCALE = 1.3; // multiplier on every card's direct bar effect (volatility of the card deck)
 export const CRACKDOWN_SKIM_MULT = 0.4; // skim multiplier during a crackdown quarter
 
 // ---- wages, treasury and excess money
 export const CENTRE_OVERSPEND_FREE = 0.7; // wage top-ups may exceed the Centre grant by this share before the Centre minds
 export const CENTRE_OVERSPEND_CAP = 1.0; // largest overspend share counted in one quarter (damps the low-Centre spiral)
-export const CENTRE_OVERSPEND_GAIN = 16; // Centre loss per unit of top-up overspend beyond the free share
+export const CENTRE_OVERSPEND_GAIN = 40; // Centre loss per unit of top-up overspend beyond the free share
 export const CASH_NORMAL = 45; // household cash considered normal; above it black prices climb
 export const BLACK_CASH_GAIN = 0.5; // extra black price multiplier per unit of cash above normal (share)
 export const BLACK_CASH_MAX = 1.0; // cap on the cash-driven black price surcharge
@@ -190,4 +193,4 @@ export const CRACKDOWN_TOWN_CUT = 0.7; // share of black stock households in the
 export const CRACKDOWN_SHADOW_DROP = 4; // Shadow lost at quarter end after a crackdown order
 
 // ---- effect hints
-export const HINT_LARGE = 8; // a card bar effect of at least this size (either sign) shows as a large hint
+export const HINT_LARGE = 5; // a card bar effect of at least this size (either sign) shows as a large hint

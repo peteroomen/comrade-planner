@@ -203,8 +203,10 @@ function hintCost(hints: Hint[], b: Record<string, number>): number {
 const WAGE_BILL_LIMIT = 1.7;
 // Apparatus below which the careful driver stops launching audits.
 const AUDIT_MIN_APPARATUS = 38;
+// Apparatus above which the careful driver spends every free inspector.
+const AUDIT_FREELY_APPARATUS = 62;
 // People below which the careful driver lifts wages, while the bill stays under this share of its limit.
-const PEOPLE_WAGE_TRIGGER = 42;
+const PEOPLE_WAGE_TRIGGER = 46;
 const WAGE_LIFT = 1.1;
 // Shadow level at which the careful driver orders a crackdown.
 const CRACKDOWN_SHADOW_TRIGGER = 62;
@@ -266,7 +268,9 @@ export function carefulDriver(): Driver {
     const left = status(state).inspectorsLeft;
     // Audits cost the Apparatus its goodwill, so a careful planner rations them when it runs low.
     const affordable = bars(state).apparatus >= AUDIT_MIN_APPARATUS;
-    return affordable && rank < left && score(r) > FLAG ? 'audit' : 'approve';
+    // With Apparatus running high an audit's goodwill cost is welcome, so inspectors are used freely.
+    const flush = bars(state).apparatus >= AUDIT_FREELY_APPARATUS;
+    return affordable && rank < left && (flush || score(r) > FLAG) ? 'audit' : 'approve';
   };
 
   return {
@@ -297,6 +301,11 @@ export function carefulDriver(): Driver {
           ? WAGE_LIFT
           : 1;
       for (const e of ENTERPRISE_IDS) p.wage[e] = committed[e] * scale * lift;
+      // When People runs low, steel favours the consumer-goods works and the shops charge a little less.
+      if (bars(state).people < PEOPLE_WAGE_TRIGGER) {
+        p.steelKrasnyShare = 0.4;
+        p.prices.consumer *= 0.9;
+      }
       // One crackdown when Shadow runs high, on the town showing the most signs: queues (people
       // turning to the black market) and enterprises we distrust. Never two quarters running.
       const crackedLast = lastCrackdown;

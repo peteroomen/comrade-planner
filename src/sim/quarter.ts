@@ -212,6 +212,18 @@ export function finishQuarter(state: GameState): void {
     if (raised) lines.push('New year: the Centre has raised its targets to match your reports.');
   }
 
+  // The province grows harder each year: expectations rise, the machine wears, the black market matures.
+  const years = (state.quarter - 1) / B.QUARTERS_PER_YEAR;
+  applyBar(state, 'people', -B.PEOPLE_YEAR_DRAG * years);
+  applyBar(state, 'apparatus', -B.APPARATUS_YEAR_DRAG * years);
+  applyBar(state, 'shadow', B.SHADOW_YEAR_GAIN * years);
+
+  // Left alone, managers get greedier: more skimming, more padding. Audits cut greed back.
+  for (const e of ENTERPRISE_IDS) {
+    const m = state.managers[e];
+    m.greed = Math.min(1, m.greed + B.GREED_CREEP);
+  }
+
   if (!state.ended) driftBars(state);
   for (const b of Object.keys(state.bars) as (keyof typeof state.bars)[]) {
     state.bars[b] = clampBar(state.bars[b]);

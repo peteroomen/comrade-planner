@@ -1,3 +1,4 @@
+import { BAR_IDS } from '@/content/ids';
 import { newGame } from '@/sim/facade';
 import type { GameState } from '@/sim/types';
 import type { Driver, DriverFactory } from './drivers';
@@ -9,6 +10,11 @@ export interface SeedResult {
   quarters: number;
   /** Cause such as "people-low", or 'survived'. */
   cause: string;
+  /** Sum over quarters of |card effect| per bar, and of |everything else| (net change minus card effect) per bar. */
+  cardMove: number;
+  otherMove: number;
+  /** The run ended on a card, in the middle of a quarter (not at the reckoning or the plan). */
+  cardDeath: boolean;
 }
 
 export interface Summary {
@@ -24,15 +30,36 @@ export interface Summary {
   histogram: Record<number, number>;
   /** Cause -> share of deaths. */
   causes: Record<string, number>;
+  /** Card effects as a share of all bar movement (card |change| over card plus non-card |change|). */
+  cardShare: number;
+  /** Share of deaths that happened on a card in the middle of a quarter. */
+  cardDeaths: number;
 }
 
 /** Play one seed to its end or to `maxQuarters`. */
 export function runSeed(driver: Driver, seed: number, maxQuarters: number): SeedResult {
   const s: GameState = newGame(seed);
-  for (let q = 0; q < maxQuarters && !s.ended; q++) playQuarterInPlace(s, driver);
+  let cardMove = 0;
+  let otherMove = 0;
+  for (let q = 0; q < maxQuarters && !s.ended; q++) {
+    const before = { ...s.bars };
+    playQuarterInPlace(s, driver);
+    for (const b of BAR_IDS) {
+      const card = s.stats.cardDeltas[b] ?? 0;
+      cardMove += Math.abs(card);
+      otherMove += Math.abs(s.bars[b] - before[b] - card);
+    }
+  }
+  const last = s.cardLog[s.cardLog.length - 1];
+  const cardDeath =
+    !!s.ended &&
+    s.week < 13 &&
+    last !== undefined &&
+    last.quarter === s.ended.quarter &&
+    last.tick === s.week;
   return s.ended
-    ? { seed, quarters: s.ended.quarter, cause: s.ended.cause }
-    : { seed, quarters: maxQuarters, cause: 'survived' };
+    ? { seed, quarters: s.ended.quarter, cause: s.ended.cause, cardMove, otherMove, cardDeath }
+    : { seed, quarters: maxQuarters, cause: 'survived', cardMove, otherMove, cardDeath };
 }
 
 /**
@@ -79,5 +106,12 @@ export function summarise(results: SeedResult[]): Summary {
     survived: (n - dead.length) / Math.max(1, n),
     histogram,
     causes,
+    cardShare:
+      results.reduce((a, r) => a + r.cardMove, 0) /
+      Math.max(
+        1,
+        results.reduce((a, r) => a + r.cardMove + r.otherMove, 0),
+      ),
+    cardDeaths: dead.filter((r) => r.cardDeath).length / Math.max(1, dead.length),
   };
 }

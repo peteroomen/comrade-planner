@@ -42,15 +42,15 @@ function merge(hints: Hint[]): Hint[] {
 }
 
 /**
- * Hints for one side of a card in `quarter`: the sign and size of its immediate bar effects (summed per bar, scaled as the sim scales them),
+ * Hints for one side of a card: the sign and size of its immediate bar effects (summed per bar, scaled as the sim scales them),
  * plus the hand-written `later` hints for world effects.
  */
-export function choiceHints(choice: CardChoice, quarter = 1): Hint[] {
+export function choiceHints(choice: CardChoice): Hint[] {
   const sums: Partial<Record<BarId, number>> = {};
   for (const fx of choice.effects) {
     if (fx.kind !== 'bars') continue;
     for (const [bar, d] of Object.entries(fx.delta) as [BarId, number][]) {
-      sums[bar] = (sums[bar] ?? 0) + d * cardScale(quarter);
+      sums[bar] = (sums[bar] ?? 0) + d * cardScale();
     }
   }
   const hints: Hint[] = [];
@@ -78,8 +78,9 @@ export function stampHints(decision: Decision): Hint[] {
       // Small Apparatus thanks; any padding approved is ours at the Centre's spot-check.
       return [small('apparatus', 'up', 'now'), small('centre', 'down', 'later', true)];
     case 'reject':
+      // Rejecting honest work costs a lot, rejecting a lie little: the marker must not say which.
       return [
-        small('apparatus', 'down', 'now'),
+        { bar: 'apparatus', dir: 'down', size: 'large', when: 'now', uncertain: true },
         small('people', 'down', 'now', true),
         small('centre', 'down', 'now', true),
       ];

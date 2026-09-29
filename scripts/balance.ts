@@ -47,13 +47,23 @@ for (const a of ARCHETYPES.filter((x) => !only || only.includes(x.name))) {
   console.error(`${a.name}: ${((Date.now() - t) / 1000).toFixed(1)}s`);
 }
 
-const head = ['archetype', 'median', 'p10', 'p90', 'dead<=Q3', 'dead<Q6', 'survived'];
+const head = [
+  'archetype',
+  'median',
+  'p10',
+  'p90',
+  'dead<=Q3',
+  'dead<Q6',
+  'survived',
+  'card share',
+  'card deaths',
+];
 const table = [
   `| ${head.join(' | ')} |`,
   `| ${head.map(() => '---').join(' | ')} |`,
   ...rows.map(
     ({ name, s }) =>
-      `| ${name} | ${num(s.median)} | ${num(s.p10)} | ${num(s.p90)} | ${pct(s.deadByQ3)} | ${pct(s.deadBeforeQ6)} | ${pct(s.survived)} |`,
+      `| ${name} | ${num(s.median)} | ${num(s.p10)} | ${num(s.p90)} | ${pct(s.deadByQ3)} | ${pct(s.deadBeforeQ6)} | ${pct(s.survived)} | ${pct(s.cardShare)} | ${pct(s.cardDeaths)} |`,
   ),
 ];
 const detail = rows.map(
@@ -65,6 +75,7 @@ const md = [
   '',
   `${seeds} seeds per archetype (seeds 1..${seeds}), runs censored at ${MAX_QUARTERS} quarters. Quarters are the quarter of death; survivors count as ${MAX_QUARTERS}.`,
   'Regenerate with `npm run balance`.',
+  'Card share: card effects as a share of all bar movement (sum of |card change| over card plus non-card |change|, per bar per quarter; non-card is net change minus card effect, so cards that cancel the sim still count). Card deaths: share of deaths that happened on a card in mid-quarter.',
   '',
   ...table,
   '',

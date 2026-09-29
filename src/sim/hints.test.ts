@@ -34,7 +34,7 @@ describe('card hints', () => {
 
   it('marks effects of at least HINT_LARGE as large', () => {
     // Deltas are given in on-screen points: divide by the scale the sim applies in quarter 1.
-    const k = cardScale(1);
+    const k = cardScale();
     const hints = choiceHints({
       label: 'x',
       effects: [
@@ -146,5 +146,17 @@ describe('plan hints', () => {
     b.crackdown = 'kovrino';
     const people = planHints(a, b)[0]?.hints.find((h) => h.bar === 'people');
     expect(people?.size).toBe('large');
+  });
+});
+
+describe('card effect size', () => {
+  it('no card side moves any bar by more than 12 points', () => {
+    for (const card of CARDS) {
+      for (const choice of [card.left, card.right]) {
+        for (const [bar, d] of Object.entries(barsOf(choice.effects))) {
+          expect(Math.abs(d) * cardScale(), `${card.id} ${bar}`).toBeLessThanOrEqual(12);
+        }
+      }
+    }
   });
 });

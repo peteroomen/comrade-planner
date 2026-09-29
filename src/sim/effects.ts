@@ -10,7 +10,7 @@ export function applyEffect(state: GameState, fx: Effect): void {
   switch (fx.kind) {
     case 'bars':
       for (const [bar, raw] of Object.entries(fx.delta) as [keyof GameState['bars'], number][]) {
-        const delta = raw * cardScale(state.quarter);
+        const delta = raw * cardScale();
         state.stats.cardDeltas[bar] = (state.stats.cardDeltas[bar] ?? 0) + delta;
         applyBar(state, bar, delta);
       }
