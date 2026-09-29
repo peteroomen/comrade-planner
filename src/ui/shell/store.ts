@@ -118,8 +118,8 @@ export function reduce(ui: UiState, a: Action): UiState {
       return {
         ...ui,
         reckoningSeen: true,
-        // Each quarter starts from the last plan, with the observers taken down.
-        draft: { ...currentPlan(game), observers: [] },
+        // Each quarter starts from the last plan, with observers and any crackdown order taken down.
+        draft: { ...currentPlan(game), observers: [], crackdown: null },
       };
     }
   }

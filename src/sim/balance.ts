@@ -97,6 +97,10 @@ export const INPUT_PAD_SKIM = 1.0; // reported inputs padded by skim share * thi
 export const REQUEST_PAD = 0.6; // request padding = distortion * this
 export const REQUEST_BASE_COVER = 1.05; // an honest request covers this multiple of true steel use
 export const REJECT_HAIRCUT = 0.85; // rejected report counts upward at this share of its figure
+export const REJECT_CHASTEN = 0.4; // next quarter's distortion is scaled by this after a padded report is rejected
+export const REQUEST_BLEND = 0.5; // weight of granted steel requests against the plan's steel share
+export const SHADOW_HOARD_GAIN = 0.03; // Shadow gain per unit of steel an over-granted request sends to a warehouse
+export const HOARD_MAX_SHARE = 0.5; // largest share of a factory's steel a padded request can divert
 
 // ---- audits and inspectors
 export const INSPECTORS_BASE = 1; // inspectors available at Centre bar 0
@@ -117,10 +121,15 @@ export const PEOPLE_WAGE_GAIN = 8; // People change per unit of (avg wage / fair
 export const PEOPLE_UNPAID_GAIN = 25; // People loss per unit of unpaid wage share
 export const PEOPLE_QUEUE_GAIN = 12; // People loss per unit of share of ticks with queues
 export const APPARATUS_APPROVE = 0.15; // Apparatus gain per approved report
-export const APPARATUS_PADDED_APPROVE = 0.25; // extra Apparatus gain when approving a padded report
-export const APPARATUS_REJECT = 3.0; // Apparatus loss per rejected report
+export const APPARATUS_REJECT_PADDED = 1.0; // Apparatus loss for rejecting a padded report (the right call, small cost)
+export const APPARATUS_REJECT_HONEST = 4.0; // Apparatus loss for rejecting an honest report
+export const PEOPLE_REJECT_HONEST = 2.0; // People loss when an honest report is rejected (the works resent being called liars)
 export const APPARATUS_AUDIT = 1.5; // Apparatus loss per audit launched
 export const APPARATUS_CAUGHT = 3.5; // extra Apparatus loss when an audit catches padding
+export const APPARATUS_AUDIT_CLEAN = 1.0; // extra Apparatus loss when an audit finds nothing (wasted inspector)
+export const CENTRE_AUDIT_CAUGHT = 2.5; // Centre gain when an audit catches padding
+export const SHADOW_AUDIT_CAUGHT = 3.0; // Shadow loss when an audit catches padding
+export const AUDIT_CAUGHT_GREED_CUT = 0.15; // greed a manager loses after being caught by an audit
 export const APPARATUS_REQUEST_GRANTED = 0.05; // Apparatus gain per granted next-quarter request
 export const CENTRE_MEET_GAIN = 28; // Centre change per unit of (reported / target - 1)
 export const CENTRE_MEET_CAP = 0.5; // largest |reported / target - 1| the Centre counts
@@ -156,3 +165,19 @@ export const QUOTA_MAX_SHARE = 2.0; // plan quota cap as a share of base quota
 export const RESERVE_GRAIN_START = 120; // province grain reserve at newGame
 export const CRACKDOWN_BLACK_CUT = 0.6; // share of black stock destroyed in a crackdown
 export const CRACKDOWN_SKIM_MULT = 0.4; // skim multiplier during a crackdown quarter
+
+// ---- wages, treasury and excess money
+export const CENTRE_OVERSPEND_FREE = 0.7; // wage top-ups may exceed the Centre grant by this share before the Centre minds
+export const CENTRE_OVERSPEND_GAIN = 8; // Centre loss per unit of top-up overspend beyond the free share
+export const CASH_NORMAL = 45; // household cash considered normal; above it black prices climb
+export const BLACK_CASH_GAIN = 0.5; // extra black price multiplier per unit of cash above normal (share)
+export const BLACK_CASH_MAX = 1.0; // cap on the cash-driven black price surcharge
+export const SHADOW_CONSUMER_BLACK_GAIN = 6; // Shadow gain per unit of consumer goods share bought on the black market
+export const PEOPLE_CONSUMER_QUEUE_GAIN = 4; // People loss per unit of consumer demand the state shops could not meet
+
+// ---- crackdown order (plan)
+export const CRACKDOWN_PEOPLE = 3; // People lost when a crackdown order begins the quarter
+export const CRACKDOWN_APPARATUS = 2.5; // Apparatus lost when a crackdown order begins the quarter
+export const CRACKDOWN_REPEAT_PEOPLE = 3; // extra People lost for a crackdown in consecutive quarters
+export const CRACKDOWN_TOWN_CUT = 0.7; // share of black stock households in the targeted town cannot reach
+export const CRACKDOWN_SHADOW_DROP = 4; // Shadow lost at quarter end after a crackdown order

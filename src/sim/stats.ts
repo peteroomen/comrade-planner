@@ -24,6 +24,12 @@ export function emptyStats(): QuarterStats {
     produced,
     inputs,
     skimmed: 0,
+    approvedPadding: 0,
+    requestHoard: 0,
+    centreGrant: 0,
+    treasuryTopUp: 0,
+    consumerWanted: 0,
+    consumerShopUnmet: 0,
     cardDeltas: {},
   };
 }

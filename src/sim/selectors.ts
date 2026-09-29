@@ -6,6 +6,8 @@ import type { BarId, EnterpriseId, GoodId, LocationRef, TownId } from '@/content
 import { MAP_HEIGHT, MAP_WIDTH, RAIL, ROADS, STATIONS } from '@/content/map';
 import { TOWNS } from '@/content/towns';
 import * as B from './balance';
+import { centreGrant, wageBill } from './households';
+import { TREASURY, balance } from './ledger';
 import type { Bars, Decision, GameState, Phase, Plan, Stock } from './types';
 
 // Visibility selectors: the only way the UI reads the sim. They return fresh plain objects and
@@ -220,6 +222,27 @@ export function status(state: GameState): GameStatus {
     inspectorsLeft: state.inspectorsLeft,
     ownInflate: state.ownInflate,
     cardWaiting: state.activeCard !== null,
+  };
+}
+
+export interface TreasuryView {
+  /** The planner's own account. */
+  balance: number;
+  /** What the Centre pays in each week at the current Centre bar. */
+  centreGrantPerWeek: number;
+  /** The weekly wage bill at the committed plan's wages. */
+  wageBillPerWeek: number;
+  /** Money the treasury has topped up enterprises with so far this quarter. */
+  topUpsThisQuarter: number;
+}
+
+/** Public: the treasury is the planner's own account. */
+export function treasury(state: GameState): TreasuryView {
+  return {
+    balance: balance(state, TREASURY),
+    centreGrantPerWeek: Math.round(centreGrant(state)),
+    wageBillPerWeek: wageBill(state),
+    topUpsThisQuarter: state.stats.treasuryTopUp,
   };
 }
 

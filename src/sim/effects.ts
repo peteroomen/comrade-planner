@@ -1,9 +1,8 @@
-import * as B from './balance';
 import { applyBar } from './bars';
+import { crackdownCard, raidBlackStock } from './crackdown';
 import { TREASURY, enterpriseAccount, householdAccount, transfer } from './ledger';
 import { refreshManagers } from './managers';
 import { delayShipments } from './shipments';
-import { GOODS } from '@/content/ids';
 import type { Effect, GameState } from './types';
 
 /** Interpret one card effect. Effects are data (see content/cards.ts); this is the only place they run. */
@@ -48,9 +47,10 @@ export function applyEffect(state: GameState, fx: Effect): void {
       state.centre.extraInspectors += fx.n;
       break;
     case 'crackdown':
-      for (const g of GOODS) state.black.stock[g] *= 1 - B.CRACKDOWN_BLACK_CUT;
-      state.modifiers.push({ name: 'skimMult', value: B.CRACKDOWN_SKIM_MULT, quartersLeft: 1 });
-      refreshManagers(state);
+      crackdownCard(state);
+      break;
+    case 'blackRaid':
+      raidBlackStock(state, fx.cut);
       break;
     case 'repair':
       transfer(state, TREASURY, enterpriseAccount(fx.enterprise), fx.cost);

@@ -24,6 +24,7 @@ export function defaultPlan(): Plan {
     steelKrasnyShare: 0.55,
     grainAllocation,
     observers: [],
+    crackdown: null,
   };
 }
 
@@ -70,5 +71,9 @@ export function sanitizePlan(input: Plan): Plan {
     seen.add(key);
     plan.observers.push({ type: ref.type, id: ref.id } as LocationRef);
   }
+  plan.crackdown =
+    input.crackdown && (TOWN_IDS as readonly string[]).includes(input.crackdown)
+      ? input.crackdown
+      : null;
   return plan;
 }

@@ -42,20 +42,14 @@ describe('balance harness', () => {
     expect(s.causes['people-low']).toBeCloseTo(2 / 3);
   });
 
-  // TODO(package 3): milestone 1 balance rewards approving lies, so careful currently loses to
-  // naive. `it.fails` keeps this honest: it passes while the ordering is wrong and turns red as
-  // soon as tuning makes it true, at which point change it back to a plain `it`.
-  it.fails(
-    'careful outlasts naive outlasts random (median quarters)',
-    () => {
-      const median = (d: Parameters<typeof runArchetype>[0]) =>
-        summarise(runArchetype(d, SEEDS)).median;
-      const careful = median(() => carefulDriver());
-      const naive = median(naiveDriver);
-      const random = median((seed) => randomDriver(seed));
-      expect(careful).toBeGreaterThan(naive);
-      expect(naive).toBeGreaterThan(random);
-    },
-    120_000,
-  );
+  // Package 3 tightens this to include trusting once tuning is final.
+  it('careful outlasts naive outlasts random (median quarters)', () => {
+    const median = (d: Parameters<typeof runArchetype>[0]) =>
+      summarise(runArchetype(d, SEEDS)).median;
+    const careful = median(() => carefulDriver());
+    const naive = median(naiveDriver);
+    const random = median((seed) => randomDriver(seed));
+    expect(careful).toBeGreaterThan(naive);
+    expect(naive).toBeGreaterThan(random);
+  }, 120_000);
 });

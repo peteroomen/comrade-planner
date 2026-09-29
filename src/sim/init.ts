@@ -87,6 +87,7 @@ export function newGame(seed: number): GameState {
         honesty: clamp01((c.honesty ?? 0.5) + (nextFloat(rngHolder) - 0.5) * 0.1),
         greed: clamp01((c.greed ?? 0.5) + (nextFloat(rngHolder) - 0.5) * 0.1),
         skim: 0,
+        chastened: 0,
       };
     }
     if (c.role === 'informant') {
@@ -153,6 +154,9 @@ export function newGame(seed: number): GameState {
     informants,
     pins: [],
     ownInflate: null,
+    requestGrants: {},
+    lastCrackdown: null,
+    notes: [],
     stats: emptyStats(),
     reckoning: null,
   };

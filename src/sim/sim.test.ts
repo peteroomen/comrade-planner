@@ -284,6 +284,11 @@ describe('observers and visibility', () => {
       'truth',
       'trueOutput',
       'prefConsumer',
+      'chastened',
+      'requestGrants',
+      'approvedPadding',
+      'requestHoard',
+      'excess',
     ];
     let s = newGame(8);
     const plan = defaultPlan();

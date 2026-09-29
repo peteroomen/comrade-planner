@@ -1,8 +1,10 @@
-import { ENTERPRISE_IDS } from '@/content/ids';
+import { ENTERPRISE_IDS, GOODS } from '@/content/ids';
+import { ENTERPRISES } from '@/content/enterprises';
 import type { EnterpriseId } from '@/content/ids';
 import * as B from './balance';
 import { applyBar, inspectorCorruptChance, inspectorsAvailable } from './bars';
 import { workersOf } from './households';
+import { skimRate } from './managers';
 import { chance, nextFloat } from './rng';
 import type { Audit, GameState, Report } from './types';
 
@@ -24,7 +26,10 @@ function distortion(state: GameState, e: EnterpriseId): number {
   const p = B.DISTORT_CHANCE_BASE + B.DISTORT_CHANCE_APPARATUS * low;
   const fires = chance(state, p);
   const noise = 1 - B.DISTORT_NOISE / 2 + B.DISTORT_NOISE * nextFloat(state);
+  // A manager whose padded report was just rejected files closer to the truth.
+  const chasten = m.chastened > 0 ? B.REJECT_CHASTEN : 1;
   const size =
+    chasten *
     (1 - m.honesty) *
     (B.DISTORT_BASE + B.DISTORT_GREED_GAIN * m.greed) *
     (1 + B.DISTORT_APPARATUS_GAIN * low) *
@@ -63,10 +68,30 @@ function resolveAudits(state: GameState): void {
           reportedInputs: r.reportedInputs,
           padded,
         };
-    if (!a.corrupt && padded) {
+    const name = ENTERPRISES[a.enterprise].name;
+    if (a.corrupt) {
+      // A captured inspector vouches for the report: nothing happens, and it reads like a clean audit.
+      state.notes.push(`Audit at ${name} found the report in order.`);
+    } else if (padded) {
       applyBar(state, 'apparatus', -B.APPARATUS_CAUGHT);
+      applyBar(state, 'centre', B.CENTRE_AUDIT_CAUGHT);
+      applyBar(state, 'shadow', -B.SHADOW_AUDIT_CAUGHT);
       const m = state.managers[a.enterprise];
       m.honesty = clamp01(m.honesty + B.AUDIT_CAUGHT_HONESTY_GAIN);
+      m.greed = clamp01(m.greed - B.AUDIT_CAUGHT_GREED_CUT);
+      m.skim = skimRate(state, m);
+      // Whatever the manager had put aside goes back into the enterprise's stock.
+      const ent = state.enterprises[a.enterprise];
+      for (const g of GOODS) {
+        ent.stock[g] += ent.warehouse[g];
+        ent.warehouse[g] = 0;
+      }
+      state.notes.push(
+        `Audit at ${name} found padding; the manager was reprimanded and goods were recovered.`,
+      );
+    } else {
+      applyBar(state, 'apparatus', -B.APPARATUS_AUDIT_CLEAN);
+      state.notes.push(`Audit at ${name} found the report in order.`);
     }
   }
 }
@@ -93,6 +118,7 @@ export function fileReports(state: GameState): void {
       decision: null,
     };
     state.reports.push(report);
+    m.chastened = 0;
   }
   state.reports = state.reports.filter((r) => r.quarter > state.quarter - B.REPORTS_KEEP);
   state.inspectorsLeft = inspectorsAvailable(state);

@@ -1,7 +1,8 @@
 import { CARD_BY_ID } from '@/content/cards';
 import type { CardChoice } from '@/content/cards';
 import { ENTERPRISE_IDS, TOWN_IDS } from '@/content/ids';
-import type { EnterpriseId, LocationRef } from '@/content/ids';
+import { ENTERPRISES } from '@/content/enterprises';
+import type { EnterpriseId, LocationRef, TownId } from '@/content/ids';
 import {
   chooseCard,
   decideReport,
@@ -12,7 +13,16 @@ import {
   setPlan,
   tick,
 } from '@/sim/facade';
-import { audits, deskReports, observerFindings, status, visibleMap } from '@/sim/selectors';
+import {
+  audits,
+  bars,
+  currentPlan,
+  deskReports,
+  observerFindings,
+  status,
+  treasury,
+  visibleMap,
+} from '@/sim/selectors';
 import type { PublicReport } from '@/sim/selectors';
 import * as B from '@/sim/balance';
 import type { Decision, GameState, Plan, Side } from '@/sim/types';
@@ -161,6 +171,11 @@ function disagreement(r: PublicReport): number {
   return 0;
 }
 
+// Weekly wage bill the careful driver allows itself, as a multiple of the Centre grant per week.
+const WAGE_BILL_LIMIT = 1.7;
+// Shadow level at which the careful driver orders a crackdown.
+const CRACKDOWN_SHADOW_TRIGGER = 62;
+
 /** Trusts the paperwork least where evidence and audits have already caught a lie. */
 export function carefulDriver(): Driver {
   const suspicion = Object.fromEntries(ENTERPRISE_IDS.map((e) => [e, 0])) as Record<
@@ -170,6 +185,7 @@ export function carefulDriver(): Driver {
   const seenQuarter: Record<string, number> = {};
   // The desk documents do not change while stamping, so read them once per quarter.
   let desk: { quarter: number; reports: PublicReport[]; handled: Set<number> } | null = null;
+  let lastCrackdown: TownId | null = null;
   // Evidence past which a claim counts as padded (the public tolerance, doubled for noise).
   const FLAG = B.PADDED_TOLERANCE * 2;
 
@@ -236,7 +252,30 @@ export function carefulDriver(): Driver {
         const found = unmet.find((o) => o.target.id === t)?.unmetGrain ?? 0;
         p.grainAllocation[t] *= 1 + 0.4 * (queues[t] ?? 0) + (found > 0 ? 0.3 : 0);
       }
-      // TODO(package 2): use crackdown and wage restraint here once the plan has those controls.
+      // Wage restraint: keep the weekly bill within what the Centre grant can fund (public figures).
+      const t = treasury(state);
+      const committed = currentPlan(state).wage;
+      const limit = t.centreGrantPerWeek * WAGE_BILL_LIMIT;
+      const scale = t.wageBillPerWeek > limit ? limit / t.wageBillPerWeek : 1;
+      for (const e of ENTERPRISE_IDS) p.wage[e] = committed[e] * scale;
+      // One crackdown when Shadow runs high, on the town showing the most signs: queues (people
+      // turning to the black market) and enterprises we distrust. Never two quarters running.
+      const crackedLast = lastCrackdown;
+      lastCrackdown = null;
+      const b = bars(state);
+      if (b.shadow > CRACKDOWN_SHADOW_TRIGGER && b.people > 35 && crackedLast === null) {
+        const score = (town: TownId): number => {
+          const q = visibleMap(state).towns.find((x) => x.id === town)?.queue ?? 0;
+          const doubt = ENTERPRISE_IDS.filter((e) => ENTERPRISES[e].town === town).reduce(
+            (sum, e) => sum + suspicion[e],
+            0,
+          );
+          return q + doubt;
+        };
+        const target = [...TOWN_IDS].sort((a, c) => score(c) - score(a))[0] ?? null;
+        p.crackdown = target;
+        lastCrackdown = target;
+      }
       return p;
     },
     side: (_state, cardId) => grantSide(cardId),

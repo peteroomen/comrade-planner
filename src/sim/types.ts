@@ -87,6 +87,8 @@ export interface Manager {
   greed: number;
   /** Hidden: share of output diverted per tick. */
   skim: number;
+  /** Hidden: quarters of chastening left after a padded report was rejected (scales distortion). */
+  chastened: number;
 }
 
 export interface ReportTruth {
@@ -166,6 +168,8 @@ export interface Plan {
   /** Share of farm grain sent to each town. Normalised on use. */
   grainAllocation: Record<TownId, number>;
   observers: LocationRef[];
+  /** Town under a crackdown order this quarter, or null. */
+  crackdown: TownId | null;
 }
 
 // ---------------------------------------------------------------- cards
@@ -180,6 +184,7 @@ export type Effect =
   | { kind: 'delayShipments'; ticks: number }
   | { kind: 'extraInspectors'; n: number }
   | { kind: 'crackdown' }
+  | { kind: 'blackRaid'; cut: number }
   | { kind: 'repair'; enterprise: EnterpriseId; cost: number }
   | { kind: 'jam'; enterprise: EnterpriseId; ticks: number };
 
@@ -253,6 +258,17 @@ export interface QuarterStats {
   /** Inputs consumed per enterprise (steel for factories, tractor-weeks for farms, ore for Stal). */
   inputs: Record<EnterpriseId, number>;
   skimmed: number;
+  /** Hidden: output the player approved above the truth (padding they now own). */
+  approvedPadding: number;
+  /** Hidden: steel that over-granted requests sent to manager warehouses. */
+  requestHoard: number;
+  /** Centre grant paid to the treasury this quarter. */
+  centreGrant: number;
+  /** Money the treasury topped up enterprises with to cover wages this quarter. */
+  treasuryTopUp: number;
+  /** Consumer goods the households wanted, and what the state shops could not supply. */
+  consumerWanted: number;
+  consumerShopUnmet: number;
   /** Bar deltas applied by cards this quarter, for the reckoning summary. */
   cardDeltas: Partial<Record<BarId, number>>;
 }
@@ -268,6 +284,12 @@ export interface Reckoning {
 export interface EndState {
   cause: string;
   quarter: number;
+}
+
+/** A steel request approved at the desk. `excess` is the padded part (hidden). */
+export interface RequestGrant {
+  amount: number;
+  excess: number;
 }
 
 export interface CentreState {
@@ -316,6 +338,12 @@ export interface GameState {
   informants: Record<CharacterId, Informant>;
   pins: Pin[];
   ownInflate: number | null;
+  /** Steel requests granted for the coming quarter (Krasny and Zarya only). Hidden excess. */
+  requestGrants: Partial<Record<'krasny' | 'zarya', RequestGrant>>;
+  /** Town that had a crackdown order last quarter, for the consecutive-quarter cost. */
+  lastCrackdown: TownId | null;
+  /** Things the player could know, collected during the quarter for the reckoning. */
+  notes: string[];
   stats: QuarterStats;
   reckoning: Reckoning | null;
 }

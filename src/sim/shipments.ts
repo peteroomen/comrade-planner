@@ -3,6 +3,7 @@ import type { EnterpriseId, GoodId, NodeId, TownId } from '@/content/ids';
 import { TOWNS } from '@/content/towns';
 import * as B from './balance';
 import { route, stationOf } from './graph';
+import { hoardShare, effectiveSteelShare } from './requests';
 import { addStock } from './stock';
 import type { GameState, Shipment } from './types';
 
@@ -79,6 +80,26 @@ function shipShares(
   }
 }
 
+/**
+ * Steel for the two factories, split by the effective share. A padded, granted request means part
+ * of the factory's portion never leaves the yard: it lands in the manager's warehouse instead.
+ */
+function shipSteel(state: GameState, from: NodeId, total: number): void {
+  const k = effectiveSteelShare(state);
+  const parts: [NodeId, 'krasny' | 'zarya', number][] = [
+    ['ent:krasny', 'krasny', total * k],
+    ['ent:zarya', 'zarya', total * (1 - k)],
+  ];
+  for (const [to, user, qty] of parts) {
+    const hoard = qty * hoardShare(state, user);
+    if (hoard > 0) {
+      addStock(state.enterprises[user].warehouse, 'steel', hoard);
+      state.stats.requestHoard += hoard;
+    }
+    if (qty - hoard >= B.SHIP_MIN_QTY) send(state, from, to, 'steel', qty - hoard);
+  }
+}
+
 /** Send finished goods on their way. Everything moves by rail, as real shipments. */
 export function dispatchGoods(state: GameState): void {
   const { plan } = state;
@@ -102,20 +123,14 @@ export function dispatchGoods(state: GameState): void {
   if (stal.stock.steel >= B.SHIP_MIN_QTY) {
     const qty = stal.stock.steel;
     stal.stock.steel = 0;
-    shipShares(state, 'ent:stal', 'steel', qty, [
-      ['ent:krasny', plan.steelKrasnyShare],
-      ['ent:zarya', 1 - plan.steelKrasnyShare],
-    ]);
+    shipSteel(state, 'ent:stal', qty);
   }
 
   // The Centre ships steel in; how much depends on the Centre bar.
   const centreSteel =
     B.CENTRE_STEEL_BASE *
     (1 + (B.CENTRE_STEEL_GAIN * (state.bars.centre - B.BAR_START)) / B.BAR_START);
-  shipShares(state, 'centre', 'steel', Math.max(0, centreSteel), [
-    ['ent:krasny', plan.steelKrasnyShare],
-    ['ent:zarya', 1 - plan.steelKrasnyShare],
-  ]);
+  if (centreSteel > 0) shipSteel(state, 'centre', centreSteel);
 
   // Krasny: whole tractors to the farm with the fewest.
   const krasny = state.enterprises.krasny;

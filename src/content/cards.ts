@@ -323,6 +323,75 @@ const events: CardDef[] = [
       effects: [{ kind: 'repair', enterprise: 'stal', cost: 600 }, bars({ apparatus: 2 })],
     },
   },
+  {
+    id: 'event-militia-raid',
+    type: 'event',
+    character: 'secretary',
+    text: 'Party Secretary Orlov offers the militia for a Saturday raid on the Kovrino bazaar. "They will find nothing, but they will find it thoroughly."',
+    condition: (s) => s.bars.shadow > 40,
+    left: {
+      label: 'Send the militia',
+      effects: [{ kind: 'blackRaid', cut: 0.35 }, bars({ shadow: -4, people: -3, apparatus: -1 })],
+    },
+    right: { label: 'Not this week', effects: [bars({ shadow: 1, apparatus: 1 })] },
+  },
+  {
+    id: 'event-gromov-names-dealer',
+    type: 'event',
+    character: 'gromov',
+    text: 'Gromov clears his throat. He will name the dealer who buys the mill\'s "lost" steel, if the paperwork from last year is forgotten.',
+    condition: (s) => s.bars.shadow > 40,
+    left: {
+      label: 'Take the name',
+      effects: [{ kind: 'blackRaid', cut: 0.2 }, bars({ shadow: -5, apparatus: -4 })],
+    },
+    right: {
+      label: 'Forget the paperwork',
+      effects: [bars({ apparatus: 2, shadow: 2, centre: -1 })],
+    },
+  },
+  {
+    id: 'event-kolkhoz-amnesty',
+    type: 'event',
+    character: 'petrenko',
+    text: 'A neighbouring kolkhoz chairman will hand back the grain he "misplaced", provided nobody writes down his name.',
+    condition: (s) => s.bars.shadow > 45,
+    left: {
+      label: 'Grant amnesty',
+      effects: [bars({ shadow: -5, centre: -3, people: 1 })],
+    },
+    right: { label: 'Prosecute him', effects: [bars({ shadow: -2, apparatus: -2, people: -2 })] },
+  },
+  {
+    id: 'event-close-bazaar',
+    type: 'event',
+    character: 'housewives',
+    text: 'The Sunday bazaar in Oblastgrad sells what the shops never have. The militia wants it closed. The queue wants to know where else to go.',
+    condition: (s) => s.bars.shadow > 40,
+    left: {
+      label: 'Close it',
+      effects: [{ kind: 'blackRaid', cut: 0.25 }, bars({ shadow: -5, people: -4 })],
+    },
+    right: { label: 'Let it trade', effects: [bars({ shadow: 3, people: 1, centre: -1 })] },
+  },
+  {
+    id: 'event-party-purge',
+    type: 'event',
+    character: 'secretary',
+    text: 'Orlov proposes a purge: one manager "of doubtful habits" is to be replaced by a comrade from the district committee.',
+    condition: (s) => s.bars.shadow > 50,
+    left: {
+      label: 'Approve the purge',
+      effects: [
+        { kind: 'modifier', name: 'skimMult', value: 0.7, quarters: 1 },
+        bars({ shadow: -3, apparatus: -5, people: -1 }),
+      ],
+    },
+    right: {
+      label: 'Protect your people',
+      effects: [bars({ apparatus: 3, centre: -2, shadow: 2 })],
+    },
+  },
 ];
 
 export const CARDS: CardDef[] = [...petitions, ...tips, ...events];

@@ -1,8 +1,16 @@
 import { ENTERPRISE_IDS } from '@/content/ids';
+import type { EnterpriseId } from '@/content/ids';
+import { ENTERPRISES } from '@/content/enterprises';
 import * as B from './balance';
 import { BLACK, TREASURY, balance, enterpriseAccount, transfer } from './ledger';
 import { modifierValue } from './modifiers';
 import type { GameState, Manager } from './types';
+
+/** Skim multiplier for one enterprise from the plan's crackdown order (1 when its town is not targeted). */
+export function crackdownSkimFactor(state: GameState, e: EnterpriseId): number {
+  const town = state.plan.crackdown;
+  return town && ENTERPRISES[e].town === town ? B.CRACKDOWN_SKIM_MULT : 1;
+}
 
 /** Share of output a manager diverts per tick. Zero for a fully honest or wholly ungreedy manager. */
 export function skimRate(state: GameState, m: Manager): number {
@@ -10,7 +18,11 @@ export function skimRate(state: GameState, m: Manager): number {
   const shadow = B.SKIM_SHADOW_GAIN * (state.bars.shadow / 100) + (1 - B.SKIM_SHADOW_GAIN / 2);
   const lowApparatus = Math.max(0, B.BAR_START - state.bars.apparatus) / B.BAR_START;
   const rate =
-    base * shadow * (1 + B.SKIM_APPARATUS_GAIN * lowApparatus) * modifierValue(state, 'skimMult');
+    base *
+    shadow *
+    (1 + B.SKIM_APPARATUS_GAIN * lowApparatus) *
+    modifierValue(state, 'skimMult') *
+    crackdownSkimFactor(state, m.enterprise);
   return rate < B.SKIM_HIDE_MIN ? 0 : Math.min(rate, 0.5);
 }
 

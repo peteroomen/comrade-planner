@@ -1,6 +1,7 @@
 import { ENTERPRISE_IDS, TOWN_IDS } from '@/content/ids';
 import * as B from './balance';
 import { applyBar, checkEnd, clampBar, driftBars } from './bars';
+import { orderCrackdown, settleCrackdown } from './crackdown';
 import { presentDueCard, scheduleCards } from './cards';
 import { DEV_CHECKS, assertConserved } from './ledger';
 import { refreshManagers } from './managers';
@@ -8,6 +9,7 @@ import { ageModifiers } from './modifiers';
 import { finalizeObservers, startObservers } from './observers';
 import { sanitizePlan } from './plan';
 import { fileReports } from './reports';
+import { grantRequests } from './requests';
 import { emptyStats } from './stats';
 import { chance } from './rng';
 import { resolveTips } from './tips';
@@ -18,12 +20,17 @@ const round1 = (v: number): number => Math.round(v * 10) / 10;
 
 /** Commit the plan and begin the quarter: managers reconsider, cards are laid out, observers placed. */
 export function beginQuarter(state: GameState, input: Plan): void {
+  const previousCrackdown = state.lastCrackdown;
   state.plan = sanitizePlan(input);
+  state.notes = [];
   state.week = 0;
   state.stats = emptyStats();
   state.ownInflate = null;
   state.reckoning = null;
   state.quarterStartBars = { ...state.bars };
+  orderCrackdown(state, previousCrackdown);
+  // The order's costs can end the run before the quarter starts.
+  if (state.ended) return;
   state.centre.extraInspectors = 0;
   state.inspectorsLeft = 0;
   refreshManagers(state);
@@ -60,12 +67,14 @@ function peopleDelta(state: GameState): number {
     state.households.reduce((sum, h) => sum + state.plan.wage[h.employer], 0) / Math.max(1, hh);
   const unpaid = s.wageDue > 0 ? 1 - s.wagePaid / s.wageDue : 0;
   const queueShare = s.queueTicks / (TOWN_IDS.length * ticks);
+  const consumerUnmet = s.consumerWanted > 0 ? s.consumerShopUnmet / s.consumerWanted : 0;
   return (
     B.PEOPLE_FED_GAIN * (fed - B.PEOPLE_FED_TARGET) +
     B.PEOPLE_CONSUMER_GAIN * (consumerPerHh - B.PEOPLE_CONSUMER_TARGET) +
     B.PEOPLE_WAGE_GAIN * (avgWage / B.WAGE_FAIR - 1) -
     B.PEOPLE_UNPAID_GAIN * unpaid -
-    B.PEOPLE_QUEUE_GAIN * queueShare
+    B.PEOPLE_QUEUE_GAIN * queueShare -
+    B.PEOPLE_CONSUMER_QUEUE_GAIN * consumerUnmet
   );
 }
 
@@ -76,9 +85,12 @@ function shadowDelta(state: GameState): number {
   const avgSkim =
     ENTERPRISE_IDS.reduce((sum, e) => sum + state.managers[e].skim, 0) / ENTERPRISE_IDS.length;
   const fullShare = s.fullShopTicks / (TOWN_IDS.length * ticks);
+  const consumerBlackShare = s.consumerBought > 0 ? s.consumerBlack / s.consumerBought : 0;
   return (
     B.SHADOW_UNMET_GAIN * unmetShare +
-    B.SHADOW_SKIM_GAIN * avgSkim -
+    B.SHADOW_SKIM_GAIN * avgSkim +
+    B.SHADOW_CONSUMER_BLACK_GAIN * consumerBlackShare +
+    B.SHADOW_HOARD_GAIN * s.requestHoard -
     B.SHADOW_FULL_SHOP_GAIN * fullShare
   );
 }
@@ -88,7 +100,7 @@ function shadowDelta(state: GameState): number {
  * the bars and either start the next plan phase or end the run.
  */
 export function finishQuarter(state: GameState): void {
-  const lines: string[] = [];
+  const lines: string[] = [...state.notes];
   const inflate = state.ownInflate ?? B.OWN_INFLATE_MIN;
   const current = state.reports.filter((r) => r.quarter === state.quarter);
 
@@ -100,16 +112,24 @@ export function finishQuarter(state: GameState): void {
   for (const r of current) {
     const decision = r.decision ?? 'approve';
     upward[r.enterprise] = r.reportedOutput * (decision === 'reject' ? B.REJECT_HAIRCUT : 1);
+    const padded =
+      r.reportedOutput > r.truth.output * (1 + B.PADDED_TOLERANCE) ||
+      r.reportedInputs > r.truth.inputs * (1 + B.PADDED_TOLERANCE);
     if (decision === 'approve') {
       approved += 1;
-      const padded =
-        r.reportedOutput > r.truth.output * (1 + B.PADDED_TOLERANCE) ||
-        r.reportedInputs > r.truth.inputs * (1 + B.PADDED_TOLERANCE);
       applyBar(state, 'apparatus', B.APPARATUS_APPROVE + B.APPARATUS_REQUEST_GRANTED);
-      if (padded) applyBar(state, 'apparatus', B.APPARATUS_PADDED_APPROVE);
+      // Approving a lie is the player's liability: it goes upward and the Centre may check it.
+      if (padded) state.stats.approvedPadding += Math.max(0, r.reportedOutput - r.truth.output);
     } else if (decision === 'reject') {
       rejected += 1;
-      applyBar(state, 'apparatus', -B.APPARATUS_REJECT);
+      if (padded) {
+        // The right call: small cost, and the manager files closer to the truth next quarter.
+        applyBar(state, 'apparatus', -B.APPARATUS_REJECT_PADDED);
+        state.managers[r.enterprise].chastened = 1;
+      } else {
+        applyBar(state, 'apparatus', -B.APPARATUS_REJECT_HONEST);
+        applyBar(state, 'people', -B.PEOPLE_REJECT_HONEST);
+      }
     } else {
       audited += 1;
       applyBar(state, 'apparatus', -B.APPARATUS_AUDIT);
@@ -118,6 +138,7 @@ export function finishQuarter(state: GameState): void {
   lines.push(
     `Reports handled: ${approved} approved, ${rejected} rejected, ${audited} sent for audit.`,
   );
+  lines.push(...grantRequests(state));
 
   // The Centre judges what we reported upward against its targets.
   let ratioSum = 0;
@@ -133,16 +154,31 @@ export function finishQuarter(state: GameState): void {
       ? 'The Centre notes that the province met its targets.'
       : 'The Centre notes that the province fell short of its targets.',
   );
-  const checkP = B.CENTRE_CHECK_BASE + B.CENTRE_CHECK_INFLATE_GAIN * (inflate - 1);
+  // The spot-check judges effective inflation: what went upward (own inflation and any padding
+  // the player approved) against what was truly produced.
+  const upTotal = ENTERPRISE_IDS.reduce((sum, e) => sum + upward[e], 0);
+  const trueTotal = current.reduce((sum, r) => sum + r.truth.output, 0);
+  const effective = inflate * Math.max(1, upTotal / Math.max(1, trueTotal));
+  const checkP = B.CENTRE_CHECK_BASE + B.CENTRE_CHECK_INFLATE_GAIN * (effective - 1);
   const checked = chance(state, checkP);
-  if (checked && inflate > 1.02) {
-    applyBar(state, 'centre', -B.CENTRE_CAUGHT_INFLATION * (inflate - 1));
+  if (checked && effective > 1.02) {
+    applyBar(state, 'centre', -B.CENTRE_CAUGHT_INFLATION * (effective - 1));
     lines.push('The Centre sent auditors of its own, and found our figures inflated.');
+  }
+
+  // The Centre also minds a wage bill the treasury could only meet by topping up far beyond its grant.
+  const grant = state.stats.centreGrant;
+  const overspend =
+    grant > 0 ? Math.max(0, state.stats.treasuryTopUp / grant - 1 - B.CENTRE_OVERSPEND_FREE) : 0;
+  if (overspend > 0) {
+    applyBar(state, 'centre', -B.CENTRE_OVERSPEND_GAIN * overspend);
+    lines.push('The Centre frowns at the treasury: the wage bill has been overspent.');
   }
 
   // People and Shadow come from what actually happened in the province.
   applyBar(state, 'people', peopleDelta(state));
   applyBar(state, 'shadow', shadowDelta(state));
+  settleCrackdown(state, lines);
 
   // Year end: the ratchet moves the Centre's targets toward what we reported upward.
   if (state.quarter % B.QUARTERS_PER_YEAR === 0) {
