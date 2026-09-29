@@ -14,6 +14,7 @@ import {
   tick,
 } from '@/sim/facade';
 import {
+  activeCard,
   audits,
   bars,
   currentPlan,
@@ -23,7 +24,7 @@ import {
   treasury,
   visibleMap,
 } from '@/sim/selectors';
-import type { PublicReport } from '@/sim/selectors';
+import type { Hint, PublicReport } from '@/sim/selectors';
 import * as B from '@/sim/balance';
 import type { Decision, GameState, Plan, Side } from '@/sim/types';
 
@@ -171,8 +172,40 @@ function disagreement(r: PublicReport): number {
   return 0;
 }
 
+// How far the careful driver assumes a small / large hint moves a bar, in bar points.
+const HINT_SMALL_PTS = 2.5;
+const HINT_LARGE_PTS = 7;
+// Discounts for hints that may not happen or arrive later, and the extra fear of the bar edges.
+const HINT_UNCERTAIN_WEIGHT = 0.5;
+const HINT_LATER_WEIGHT = 0.7;
+const EDGE_FEAR = 40;
+
+/**
+ * Cost of a choice from its public hints alone: how much it pushes the four bars away from the
+ * middle, counting the edges (where the run ends) as worse than the middle. Lower is better.
+ */
+function hintCost(hints: Hint[], b: Record<string, number>): number {
+  let cost = 0;
+  for (const h of hints) {
+    const pts = (h.size === 'large' ? HINT_LARGE_PTS : HINT_SMALL_PTS) * (h.dir === 'up' ? 1 : -1);
+    const w =
+      (h.uncertain ? HINT_UNCERTAIN_WEIGHT : 1) * (h.when === 'later' ? HINT_LATER_WEIGHT : 1);
+    const from = b[h.bar] ?? 50;
+    const to = from + pts;
+    const dist = (v: number): number =>
+      (v - 50) ** 2 + (EDGE_FEAR * Math.max(0, Math.abs(v - 50) - 30) ** 2) / 10;
+    cost += w * (dist(to) - dist(from));
+  }
+  return cost;
+}
+
 // Weekly wage bill the careful driver allows itself, as a multiple of the Centre grant per week.
 const WAGE_BILL_LIMIT = 1.7;
+// Apparatus below which the careful driver stops launching audits.
+const AUDIT_MIN_APPARATUS = 38;
+// People below which the careful driver lifts wages, while the bill stays under this share of its limit.
+const PEOPLE_WAGE_TRIGGER = 42;
+const WAGE_LIFT = 1.1;
 // Shadow level at which the careful driver orders a crackdown.
 const CRACKDOWN_SHADOW_TRIGGER = 62;
 
@@ -231,7 +264,9 @@ export function carefulDriver(): Driver {
     const open = pending.filter((x) => !desk?.handled.has(x.id) || x.id === reportId);
     const rank = open.sort((a, b) => score(b) - score(a)).findIndex((x) => x.id === reportId);
     const left = status(state).inspectorsLeft;
-    return rank < left && score(r) > FLAG ? 'audit' : 'approve';
+    // Audits cost the Apparatus its goodwill, so a careful planner rations them when it runs low.
+    const affordable = bars(state).apparatus >= AUDIT_MIN_APPARATUS;
+    return affordable && rank < left && score(r) > FLAG ? 'audit' : 'approve';
   };
 
   return {
@@ -257,7 +292,11 @@ export function carefulDriver(): Driver {
       const committed = currentPlan(state).wage;
       const limit = t.centreGrantPerWeek * WAGE_BILL_LIMIT;
       const scale = t.wageBillPerWeek > limit ? limit / t.wageBillPerWeek : 1;
-      for (const e of ENTERPRISE_IDS) p.wage[e] = committed[e] * scale;
+      const lift =
+        bars(state).people < PEOPLE_WAGE_TRIGGER && t.wageBillPerWeek * WAGE_LIFT < limit
+          ? WAGE_LIFT
+          : 1;
+      for (const e of ENTERPRISE_IDS) p.wage[e] = committed[e] * scale * lift;
       // One crackdown when Shadow runs high, on the town showing the most signs: queues (people
       // turning to the black market) and enterprises we distrust. Never two quarters running.
       const crackedLast = lastCrackdown;
@@ -278,7 +317,15 @@ export function carefulDriver(): Driver {
       }
       return p;
     },
-    side: (_state, cardId) => grantSide(cardId),
+    // Tips are pinned (the informant may be wrong, which observers and audits will show). Every
+    // other card goes the way its public hints push the bars toward the middle.
+    side: (state, cardId) => {
+      const card = activeCard(state);
+      if (!card || card.cardId !== cardId) return grantSide(cardId);
+      if (card.type === 'tip') return grantSide(cardId);
+      const now = bars(state);
+      return hintCost(card.left.hints, now) <= hintCost(card.right.hints, now) ? 'left' : 'right';
+    },
     decide: (state, reportId) => {
       const decision = stamp(state, reportId);
       desk?.handled.add(reportId);

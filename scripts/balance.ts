@@ -4,7 +4,7 @@ import { runArchetype, summarise } from '../src/sim/harness/run';
 import type { Summary } from '../src/sim/harness/run';
 
 // Balance harness: plays each archetype over many seeds and prints a compact table.
-// Usage: npm run balance [-- --seeds N] [--out path]
+// Usage: npm run balance [-- --seeds N] [--out path] [--only random,naive]
 
 const args = process.argv.slice(2);
 const flag = (name: string): string | undefined => {
@@ -13,6 +13,7 @@ const flag = (name: string): string | undefined => {
 };
 const seeds = Math.max(1, Math.floor(Number(flag('seeds') ?? 300)) || 300);
 const out = flag('out') ?? 'docs/balance/latest.md';
+const only = flag('only')?.split(',');
 const MAX_QUARTERS = 40;
 
 const pct = (v: number): string => `${Math.round(v * 100)}%`;
@@ -39,7 +40,7 @@ function causes(s: Summary): string {
 
 const started = Date.now();
 const rows: { name: string; s: Summary; secs: number }[] = [];
-for (const a of ARCHETYPES) {
+for (const a of ARCHETYPES.filter((x) => !only || only.includes(x.name))) {
   const t = Date.now();
   const s = summarise(runArchetype(a.make, seeds, MAX_QUARTERS));
   rows.push({ name: a.name, s, secs: (Date.now() - t) / 1000 });

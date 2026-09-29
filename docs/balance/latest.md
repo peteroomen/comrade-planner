@@ -4,34 +4,34 @@
 Regenerate with `npm run balance`.
 
 | archetype | median | p10 | p90 | dead<=Q3 | dead<Q6 | survived |
-| --- | --- | --- | --- | --- | --- | --- |
-| random | 5 | 4 | 7 | 4% | 53% | 0% |
-| naive | 14.5 | 6 | 31 | 0% | 6% | 3% |
-| trusting | 19 | 10.9 | 24 | 0% | 1% | 0% |
-| careful | 26 | 17.9 | 31 | 0% | 1% | 0% |
-| inflater | 5 | 4 | 5 | 0% | 92% | 0% |
+| --------- | ------ | --- | --- | -------- | ------- | -------- |
+| random    | 4      | 2   | 5.1 | 46%      | 90%     | 0%       |
+| naive     | 6      | 4   | 10  | 9%       | 40%     | 0%       |
+| trusting  | 8      | 6   | 10  | 1%       | 9%      | 0%       |
+| careful   | 13     | 7.9 | 20  | 0%       | 1%      | 0%       |
+| inflater  | 3      | 3   | 4   | 75%      | 100%    | 0%       |
 
 ### random
 
-- Death quarter histogram (deaths): Q3:11 Q4:59 Q5:90 Q6:82 Q7:29 Q8:20 Q9:6 Q10:2 Q11:1
-- Share of deaths by cause: centre-low 82%, people-low 14%, apparatus-low 5%
+- Death quarter histogram (deaths): Q1:1 Q2:46 Q3:90 Q4:86 Q5:47 Q6:19 Q7:8 Q8:3
+- Share of deaths by cause: centre-low 45%, people-low 34%, apparatus-low 16%, shadow-high 5%, people-high 0%
 
 ### naive
 
-- Death quarter histogram (deaths): Q4:1 Q5:16 Q6:16 Q7:5 Q8:10 Q9:12 Q10:18 Q11:17 Q12:25 Q13:15 Q14:15 Q15:15 Q16:9 Q17:13 Q18:16 Q19:6 Q20:6 Q21:10 Q22:6 Q23:5 Q24:7 Q25:5 Q26:3 Q27:5 Q28:3 Q29:7 Q30:2 Q31:8 Q32:5 Q33:1 Q34:2 Q35:5 Q36:1 Q37:1 40+:9
-- Share of deaths by cause: centre-low 81%, people-low 14%, shadow-high 4%, apparatus-high 0%
+- Death quarter histogram (deaths): Q2:1 Q3:27 Q4:52 Q5:39 Q6:55 Q7:38 Q8:23 Q9:21 Q10:16 Q11:9 Q12:7 Q13:5 Q14:4 Q15:2 Q19:1
+- Share of deaths by cause: shadow-high 41%, people-low 35%, apparatus-low 11%, centre-low 6%, apparatus-high 5%, centre-high 2%, people-high 1%
 
 ### trusting
 
-- Death quarter histogram (deaths): Q4:1 Q5:1 Q6:2 Q7:1 Q8:6 Q9:7 Q10:12 Q11:14 Q12:18 Q13:20 Q14:7 Q15:9 Q16:10 Q17:10 Q18:11 Q19:22 Q20:20 Q21:27 Q22:24 Q23:30 Q24:19 Q25:18 Q26:4 Q28:3 Q29:1 Q30:1 Q31:1 Q34:1
-- Share of deaths by cause: centre-low 50%, apparatus-high 48%, people-low 2%
+- Death quarter histogram (deaths): Q3:2 Q4:6 Q5:20 Q6:32 Q7:69 Q8:54 Q9:56 Q10:34 Q11:12 Q12:8 Q13:3 Q14:2 Q17:1 Q18:1
+- Share of deaths by cause: apparatus-high 39%, people-high 38%, centre-low 14%, shadow-high 5%, apparatus-low 3%, people-low 1%
 
 ### careful
 
-- Death quarter histogram (deaths): Q4:2 Q5:1 Q8:1 Q9:4 Q11:1 Q12:4 Q13:6 Q14:4 Q15:3 Q16:1 Q17:3 Q18:4 Q19:2 Q20:4 Q21:6 Q22:16 Q23:19 Q24:28 Q25:36 Q26:33 Q27:32 Q28:25 Q29:16 Q30:18 Q31:6 Q32:6 Q33:3 Q34:6 Q35:4 Q36:1 Q37:1 Q38:1 Q39:1 40+:1
-- Share of deaths by cause: apparatus-high 70%, centre-low 10%, shadow-low 10%, people-low 8%, apparatus-low 1%
+- Death quarter histogram (deaths): Q4:2 Q5:1 Q6:8 Q7:19 Q8:20 Q9:19 Q10:26 Q11:22 Q12:20 Q13:19 Q14:19 Q15:17 Q16:15 Q17:21 Q18:21 Q19:14 Q20:16 Q21:4 Q22:7 Q23:2 Q24:4 Q25:2 Q26:1 Q27:1
+- Share of deaths by cause: people-low 40%, apparatus-low 30%, centre-low 16%, shadow-low 6%, shadow-high 5%, apparatus-high 1%, people-high 1%, centre-high 1%
 
 ### inflater
 
-- Death quarter histogram (deaths): Q4:70 Q5:206 Q6:24
-- Share of deaths by cause: centre-low 100%
+- Death quarter histogram (deaths): Q2:28 Q3:196 Q4:68 Q5:8
+- Share of deaths by cause: centre-low 93%, people-low 5%, shadow-high 3%

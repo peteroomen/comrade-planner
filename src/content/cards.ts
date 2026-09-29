@@ -47,13 +47,13 @@ const petitions: CardDef[] = [
     character: 'petrenko',
     text: 'Comrade Petrenko begs for two more tractors. "The fields will not plough themselves, Comrade Planner."',
     condition: always,
-    left: { label: 'Refuse', effects: [bars({ apparatus: -4 })] },
+    left: { label: 'Refuse', effects: [bars({ apparatus: -4, centre: 2 })] },
     right: {
       label: 'Grant them',
       later: [{ bar: 'people', dir: 'up', size: 'small' }],
       effects: [
         { kind: 'tractors', enterprise: 'lesnoy', n: 2 },
-        bars({ apparatus: 5, centre: -2 }),
+        bars({ apparatus: 2, centre: -1 }),
       ],
     },
   },
@@ -63,7 +63,7 @@ const petitions: CardDef[] = [
     character: 'gromov',
     text: 'The Stal furnace crews want a bonus for last winter. Gromov says morale is "brittle".',
     condition: (s) => s.bars.people < 80,
-    left: { label: 'No bonus', effects: [bars({ people: -3, apparatus: -1 })] },
+    left: { label: 'No bonus', effects: [bars({ people: -3, apparatus: -1, centre: 2 })] },
     right: {
       label: 'Pay it',
       later: [
@@ -72,7 +72,7 @@ const petitions: CardDef[] = [
       ],
       effects: [
         { kind: 'bonus', enterprise: 'stal', amount: 1200 },
-        bars({ people: 3, apparatus: 3, centre: -2 }),
+        bars({ people: 3, apparatus: 1, centre: -1 }),
       ],
     },
   },
@@ -82,13 +82,13 @@ const petitions: CardDef[] = [
     character: 'housewives',
     text: 'The Oblastgrad queue asks you to open the grain reserve. Someone has brought a baby to the shop door.',
     condition: (s) => s.reserveGrain > 20,
-    left: { label: 'Hold the reserve', effects: [bars({ people: -4, shadow: 2 })] },
+    left: { label: 'Hold the reserve', effects: [bars({ people: -4, shadow: 2, centre: 2 })] },
     right: {
       label: 'Open it',
       later: [{ bar: 'shadow', dir: 'down', size: 'small' }],
       effects: [
         { kind: 'reserveGrain', town: 'oblastgrad', qty: 60 },
-        bars({ people: 5, centre: -3 }),
+        bars({ people: 5, centre: -2 }),
       ],
     },
   },
@@ -98,13 +98,13 @@ const petitions: CardDef[] = [
     character: 'sidorova',
     text: 'Sidorova asks for a bigger steel ration for Zarya. "People want shirts, not only tractors."',
     condition: always,
-    left: { label: 'Krasny comes first', effects: [bars({ apparatus: -2 })] },
+    left: { label: 'Krasny comes first', effects: [bars({ apparatus: -2, centre: 1 })] },
     right: {
       label: 'Shift steel to Zarya',
       later: [{ bar: 'people', dir: 'up', size: 'small', uncertain: true }],
       effects: [
         { kind: 'steelShare', delta: -0.15 },
-        bars({ apparatus: 4, centre: -1, people: 1 }),
+        bars({ apparatus: 1, centre: -1, people: 1 }),
       ],
     },
   },
@@ -114,7 +114,7 @@ const petitions: CardDef[] = [
     character: 'delegation',
     text: 'A delegation from Kolos Farm says wages are in arrears. They have brought their own chairs and intend to wait.',
     condition: (s) => s.bars.people < 75,
-    left: { label: 'Send them home', effects: [bars({ people: -5, apparatus: 2 })] },
+    left: { label: 'Send them home', effects: [bars({ people: -5, apparatus: 2, centre: 2 })] },
     right: {
       label: 'Pay the arrears',
       later: [
@@ -123,7 +123,7 @@ const petitions: CardDef[] = [
       ],
       effects: [
         { kind: 'bonus', enterprise: 'kolos', amount: 1000 },
-        bars({ people: 4, centre: -2 }),
+        bars({ people: 4, centre: -1 }),
       ],
     },
   },
@@ -134,7 +134,7 @@ const petitions: CardDef[] = [
     text: 'Party Secretary Orlov would like his brother-in-law made a deputy at Krasny. It is only a small post.',
     condition: always,
     left: { label: 'Decline', effects: [bars({ apparatus: -5, centre: 1 })] },
-    right: { label: 'Arrange it', effects: [bars({ apparatus: 6, people: -2, shadow: 3 })] },
+    right: { label: 'Arrange it', effects: [bars({ apparatus: 3, people: -2, shadow: 3 })] },
   },
   {
     id: 'petition-distillery',
@@ -143,7 +143,7 @@ const petitions: CardDef[] = [
     text: 'Kovrino residents ask that their "cooperative" be recognised. Everyone knows what it makes.',
     condition: (s) => s.bars.shadow > 35,
     left: { label: 'Deny recognition', effects: [bars({ shadow: -2 })] },
-    right: { label: 'Look away', effects: [bars({ shadow: 6, people: 2, centre: -4 })] },
+    right: { label: 'Look away', effects: [bars({ shadow: 6, people: 2, centre: -2 })] },
   },
 ];
 
@@ -283,7 +283,7 @@ const events: CardDef[] = [
     right: {
       label: 'Pay for a detour',
       later: [{ bar: 'people', dir: 'down', size: 'small', uncertain: true }],
-      effects: [{ kind: 'delayShipments', ticks: 1 }, bars({ centre: -2, apparatus: 2 })],
+      effects: [{ kind: 'delayShipments', ticks: 1 }, bars({ centre: -1, apparatus: 2 })],
     },
   },
   {
@@ -351,7 +351,7 @@ const events: CardDef[] = [
     character: 'centre-clerk',
     text: 'The Centre offers an extra inspector for this quarter. He is very thorough, and expects to be fed.',
     condition: always,
-    left: { label: 'Send him away', effects: [bars({ centre: -1, apparatus: 1 })] },
+    left: { label: 'Send him away', effects: [bars({ apparatus: 1 })] },
     right: {
       label: 'Welcome him',
       later: [{ bar: 'shadow', dir: 'down', size: 'small', uncertain: true }],
@@ -415,7 +415,7 @@ const events: CardDef[] = [
     condition: (s) => s.bars.shadow > 45,
     left: {
       label: 'Grant amnesty',
-      effects: [bars({ shadow: -5, centre: -3, people: 1 })],
+      effects: [bars({ shadow: -5, centre: -2, people: 1 })],
     },
     right: { label: 'Prosecute him', effects: [bars({ shadow: -2, apparatus: -2, people: -2 })] },
   },

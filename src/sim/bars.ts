@@ -42,3 +42,8 @@ export function driftBars(state: GameState): void {
     state.bars[bar] += (B.BAR_START - state.bars[bar]) * B.BAR_DRIFT;
   }
 }
+
+/** Multiplier on a card's direct bar effects in `quarter`: the deck grows more demanding with time. */
+export function cardScale(quarter: number): number {
+  return B.CARD_BAR_SCALE * (1 + B.CARD_RAMP * Math.max(0, quarter - 1));
+}

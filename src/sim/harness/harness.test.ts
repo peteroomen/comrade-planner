@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { newGame } from '@/sim/facade';
-import { carefulDriver, naiveDriver, playQuarter, randomDriver } from './drivers';
+import { carefulDriver, naiveDriver, playQuarter, randomDriver, trustingDriver } from './drivers';
 import { playQuarterInPlace } from './fast';
 import { runArchetype, summarise } from './run';
 
@@ -42,14 +42,17 @@ describe('balance harness', () => {
     expect(s.causes['people-low']).toBeCloseTo(2 / 3);
   });
 
-  // Package 3 tightens this to include trusting once tuning is final.
-  it('careful outlasts naive outlasts random (median quarters)', () => {
+  // Medians over the first 50 seeds sit at about 4, 6, 7.5 and 11.5 (300 seeds: 4, 6, 8, 13), so
+  // these margins hold with room to spare. The runs are deterministic per seed.
+  it('careful outlasts trusting outlasts naive outlasts random (median quarters)', () => {
     const median = (d: Parameters<typeof runArchetype>[0]) =>
       summarise(runArchetype(d, SEEDS)).median;
     const careful = median(() => carefulDriver());
+    const trusting = median(trustingDriver);
     const naive = median(naiveDriver);
     const random = median((seed) => randomDriver(seed));
-    expect(careful).toBeGreaterThan(naive);
-    expect(naive).toBeGreaterThan(random);
+    expect(careful).toBeGreaterThanOrEqual(trusting + 2);
+    expect(trusting).toBeGreaterThanOrEqual(naive + 1);
+    expect(naive).toBeGreaterThanOrEqual(random + 1);
   }, 120_000);
 });

@@ -67,11 +67,16 @@ function peopleDelta(state: GameState): number {
     state.households.reduce((sum, h) => sum + state.plan.wage[h.employer], 0) / Math.max(1, hh);
   const unpaid = s.wageDue > 0 ? 1 - s.wagePaid / s.wageDue : 0;
   const queueShare = s.queueTicks / (TOWN_IDS.length * ticks);
+  // Dearer shops are resented at once; cheaper ones please (and drain the treasury's takings).
+  const priceStrain =
+    0.5 * (state.plan.prices.grain / B.PRICE_GRAIN_DEFAULT - 1) +
+    0.5 * (state.plan.prices.consumer / B.PRICE_CONSUMER_DEFAULT - 1);
   const consumerUnmet = s.consumerWanted > 0 ? s.consumerShopUnmet / s.consumerWanted : 0;
   return (
     B.PEOPLE_FED_GAIN * (fed - B.PEOPLE_FED_TARGET) +
     B.PEOPLE_CONSUMER_GAIN * (consumerPerHh - B.PEOPLE_CONSUMER_TARGET) +
     B.PEOPLE_WAGE_GAIN * (avgWage / B.WAGE_FAIR - 1) -
+    B.PEOPLE_PRICE_GAIN * priceStrain -
     B.PEOPLE_UNPAID_GAIN * unpaid -
     B.PEOPLE_QUEUE_GAIN * queueShare -
     B.PEOPLE_CONSUMER_QUEUE_GAIN * consumerUnmet
@@ -87,6 +92,7 @@ function shadowDelta(state: GameState): number {
   const fullShare = s.fullShopTicks / (TOWN_IDS.length * ticks);
   const consumerBlackShare = s.consumerBought > 0 ? s.consumerBlack / s.consumerBought : 0;
   return (
+    B.SHADOW_BASE_GAIN +
     B.SHADOW_UNMET_GAIN * unmetShare +
     B.SHADOW_SKIM_GAIN * avgSkim +
     B.SHADOW_CONSUMER_BLACK_GAIN * consumerBlackShare +
@@ -117,7 +123,11 @@ export function finishQuarter(state: GameState): void {
       r.reportedInputs > r.truth.inputs * (1 + B.PADDED_TOLERANCE);
     if (decision === 'approve') {
       approved += 1;
-      applyBar(state, 'apparatus', B.APPARATUS_APPROVE + B.APPARATUS_REQUEST_GRANTED);
+      applyBar(
+        state,
+        'apparatus',
+        (padded ? B.APPARATUS_PADDED_APPROVE : B.APPARATUS_APPROVE) + B.APPARATUS_REQUEST_GRANTED,
+      );
       // Approving a lie is the player's liability: it goes upward and the Centre may check it.
       if (padded) state.stats.approvedPadding += Math.max(0, r.reportedOutput - r.truth.output);
     } else if (decision === 'reject') {
@@ -166,10 +176,14 @@ export function finishQuarter(state: GameState): void {
     lines.push('The Centre sent auditors of its own, and found our figures inflated.');
   }
 
-  // The Centre also minds a wage bill the treasury could only meet by topping up far beyond its grant.
-  const grant = state.stats.centreGrant;
-  const overspend =
-    grant > 0 ? Math.max(0, state.stats.treasuryTopUp / grant - 1 - B.CENTRE_OVERSPEND_FREE) : 0;
+  // The Centre also minds a wage bill the treasury could only meet by topping up far beyond its
+  // grant. It measures against the grant at Centre 50 (not today's), so low Centre cannot spiral,
+  // and one quarter's penalty is capped.
+  const baseGrant = B.CENTRE_FUNDING_BASE * B.TICKS_PER_QUARTER;
+  const overspend = Math.min(
+    B.CENTRE_OVERSPEND_CAP,
+    Math.max(0, state.stats.treasuryTopUp / baseGrant - 1 - B.CENTRE_OVERSPEND_FREE),
+  );
   if (overspend > 0) {
     applyBar(state, 'centre', -B.CENTRE_OVERSPEND_GAIN * overspend);
     lines.push('The Centre frowns at the treasury: the wage bill has been overspent.');
@@ -193,6 +207,7 @@ export function finishQuarter(state: GameState): void {
         }
       }
       state.centre.reportedThisYear[e] = [];
+      state.centre.targets[e] *= 1 + B.CENTRE_TARGET_GROWTH;
     }
     if (raised) lines.push('New year: the Centre has raised its targets to match your reports.');
   }

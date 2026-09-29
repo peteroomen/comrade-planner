@@ -1,6 +1,7 @@
 import type { CardChoice } from '@/content/cards';
 import { TOWN_IDS } from '@/content/ids';
 import * as B from './balance';
+import { cardScale } from './bars';
 import type { BarId, Decision, Plan } from './types';
 
 // Effect hints tell the player which way a choice pushes a bar, never by how much. They come
@@ -41,15 +42,15 @@ function merge(hints: Hint[]): Hint[] {
 }
 
 /**
- * Hints for one side of a card: the sign and size of its immediate bar effects (summed per bar),
+ * Hints for one side of a card in `quarter`: the sign and size of its immediate bar effects (summed per bar, scaled as the sim scales them),
  * plus the hand-written `later` hints for world effects.
  */
-export function choiceHints(choice: CardChoice): Hint[] {
+export function choiceHints(choice: CardChoice, quarter = 1): Hint[] {
   const sums: Partial<Record<BarId, number>> = {};
   for (const fx of choice.effects) {
     if (fx.kind !== 'bars') continue;
     for (const [bar, d] of Object.entries(fx.delta) as [BarId, number][]) {
-      sums[bar] = (sums[bar] ?? 0) + d;
+      sums[bar] = (sums[bar] ?? 0) + d * cardScale(quarter);
     }
   }
   const hints: Hint[] = [];
@@ -194,10 +195,8 @@ export function planHints(committed: Plan, draft: Plan): PlanControlHints[] {
       {
         bar: 'people',
         dir: 'down',
-        size:
-          B.CRACKDOWN_PEOPLE + (repeat ? B.CRACKDOWN_REPEAT_PEOPLE : 0) >= B.HINT_LARGE
-            ? 'large'
-            : 'small',
+        // A repeat order doubles the People cost, which is worth a large marker.
+        size: repeat ? 'large' : 'small',
         when: 'now',
       },
       small('apparatus', 'down', 'now'),

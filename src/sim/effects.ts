@@ -1,4 +1,4 @@
-import { applyBar } from './bars';
+import { applyBar, cardScale } from './bars';
 import { crackdownCard, raidBlackStock } from './crackdown';
 import { TREASURY, enterpriseAccount, householdAccount, transfer } from './ledger';
 import { refreshManagers } from './managers';
@@ -9,7 +9,8 @@ import type { Effect, GameState } from './types';
 export function applyEffect(state: GameState, fx: Effect): void {
   switch (fx.kind) {
     case 'bars':
-      for (const [bar, delta] of Object.entries(fx.delta) as [keyof GameState['bars'], number][]) {
+      for (const [bar, raw] of Object.entries(fx.delta) as [keyof GameState['bars'], number][]) {
+        const delta = raw * cardScale(state.quarter);
         state.stats.cardDeltas[bar] = (state.stats.cardDeltas[bar] ?? 0) + delta;
         applyBar(state, bar, delta);
       }

@@ -75,14 +75,17 @@ describe("desk: approving padding is the player's liability", () => {
     expect(s.stats.approvedPadding).toBeGreaterThan(0);
   });
 
-  it('no longer pays an Apparatus bonus for approving padding', () => {
+  it('pays far less Apparatus thanks for approving padding than for approving honest reports', () => {
     const run = (factor: number): number => {
       let s = toDesk(honest(6));
       pad(s, factor);
       s = endQuarter(s);
       return s.bars.apparatus;
     };
-    expect(run(1.3)).toBeCloseTo(run(1.0), 5);
+    const gap = run(1.0) - run(1.3);
+    // Five reports, each paying APPARATUS_PADDED_APPROVE instead of APPARATUS_APPROVE (bar drift eats a little).
+    expect(gap).toBeGreaterThan(4 * (B.APPARATUS_APPROVE - B.APPARATUS_PADDED_APPROVE));
+    expect(gap).toBeLessThan(6 * (B.APPARATUS_APPROVE - B.APPARATUS_PADDED_APPROVE));
   });
 
   it('the ratchet raises targets on fake numbers', () => {
@@ -316,7 +319,7 @@ describe('wages and the treasury', () => {
     expect(high.line).toBe(true);
   });
 
-  it('a Centre with little to give is overspent sooner than a generous one', () => {
+  it('a low Centre does not turn the same wage bill into an overspend (no spiral)', () => {
     const line = (centre: number) => {
       const start = honest(15);
       start.bars.centre = centre;
@@ -324,7 +327,9 @@ describe('wages and the treasury', () => {
       s = endQuarter(s);
       return s.reckoning?.lines.some((l) => l.includes('overspent')) ?? false;
     };
-    expect(line(20)).toBe(true);
+    // The judgement uses the grant at Centre 50, so a shrunken grant does not make it harsher.
+    expect(line(20)).toBe(false);
+    expect(line(80)).toBe(false);
   });
 
   it('excess consumer spending on the black market raises Shadow; shop shortfalls cost People', () => {

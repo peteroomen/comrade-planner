@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { CARDS } from '@/content/cards';
 import { ENTERPRISE_IDS } from '@/content/ids';
+import * as B from './balance';
+import { cardScale } from './bars';
 import { defaultPlan, newGame } from './facade';
 import { choiceHints, planHints, stampHints } from './hints';
 import { activeCard } from './selectors';
@@ -31,9 +33,20 @@ describe('card hints', () => {
   });
 
   it('marks effects of at least HINT_LARGE as large', () => {
+    // Deltas are given in on-screen points: divide by the scale the sim applies in quarter 1.
+    const k = cardScale(1);
     const hints = choiceHints({
       label: 'x',
-      effects: [{ kind: 'bars', delta: { people: 5, apparatus: -4.9, centre: -6 } }],
+      effects: [
+        {
+          kind: 'bars',
+          delta: {
+            people: B.HINT_LARGE / k,
+            apparatus: -(B.HINT_LARGE - 0.1) / k,
+            centre: -12 / k,
+          },
+        },
+      ],
     });
     expect(hints).toEqual([
       { bar: 'people', dir: 'up', size: 'large', when: 'now' },
