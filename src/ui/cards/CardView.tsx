@@ -9,10 +9,12 @@ const THRESHOLD = 88;
 const TYPE_LABEL = { petition: 'Petition', tip: 'Tip', event: 'Event' } as const;
 
 /** What a choice would move, in words, for people who cannot see the dots over the bars. */
-const moves = (choice: ActiveCardView['left']): string =>
-  choice.hints.length > 0
-    ? `${choice.label}. Moves ${choice.hints.map((b) => BAR_LABELS[b]).join(' and ')}.`
+const moves = (choice: ActiveCardView['left']): string => {
+  const bars = [...new Set(choice.hints.map((h) => h.bar))];
+  return bars.length > 0
+    ? `${choice.label}. Moves ${bars.map((b) => BAR_LABELS[b]).join(' and ')}.`
     : choice.label;
+};
 
 const initials = (name: string): string =>
   name

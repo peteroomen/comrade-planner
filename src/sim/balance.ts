@@ -181,3 +181,6 @@ export const CRACKDOWN_APPARATUS = 2.5; // Apparatus lost when a crackdown order
 export const CRACKDOWN_REPEAT_PEOPLE = 3; // extra People lost for a crackdown in consecutive quarters
 export const CRACKDOWN_TOWN_CUT = 0.7; // share of black stock households in the targeted town cannot reach
 export const CRACKDOWN_SHADOW_DROP = 4; // Shadow lost at quarter end after a crackdown order
+
+// ---- effect hints
+export const HINT_LARGE = 5; // a card bar effect of at least this size (either sign) shows as a large hint

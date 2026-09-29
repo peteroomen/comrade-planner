@@ -1,11 +1,13 @@
-import { CARD_BY_ID, hintBars } from '@/content/cards';
+import { CARD_BY_ID } from '@/content/cards';
 import { CHARACTER_BY_ID } from '@/content/characters';
 import { ENTERPRISES } from '@/content/enterprises';
 import { ENTERPRISE_IDS, TOWN_IDS } from '@/content/ids';
-import type { BarId, EnterpriseId, GoodId, LocationRef, TownId } from '@/content/ids';
+import type { EnterpriseId, GoodId, LocationRef, TownId } from '@/content/ids';
 import { MAP_HEIGHT, MAP_WIDTH, RAIL, ROADS, STATIONS } from '@/content/map';
 import { TOWNS } from '@/content/towns';
 import * as B from './balance';
+import { choiceHints } from './hints';
+import type { Hint } from './hints';
 import { centreGrant, wageBill } from './households';
 import { TREASURY, balance } from './ledger';
 import type { Bars, Decision, GameState, Phase, Plan, Stock } from './types';
@@ -519,8 +521,8 @@ export interface ActiveCardView {
   type: 'petition' | 'tip' | 'event';
   character: { id: string; name: string; title: string };
   text: string;
-  left: { label: string; hints: BarId[] };
-  right: { label: string; hints: BarId[] };
+  left: { label: string; hints: Hint[] };
+  right: { label: string; hints: Hint[] };
   target: LocationRef | null;
   /** Visible track record of the informant, for tip cards. */
   trackRecord: { right: number; wrong: number } | null;
@@ -537,9 +539,13 @@ export function activeCard(state: GameState): ActiveCardView | null {
     type: card.type,
     character: { id: card.character, name: who?.name ?? card.character, title: who?.title ?? '' },
     text: card.text,
-    left: { label: card.left.label, hints: hintBars(card.left) as BarId[] },
-    right: { label: card.right.label, hints: hintBars(card.right) as BarId[] },
+    left: { label: card.left.label, hints: choiceHints(card.left) },
+    right: { label: card.right.label, hints: choiceHints(card.right) },
     target: card.tip ? card.tip.target : null,
     trackRecord: card.type === 'tip' && inf ? { right: inf.right, wrong: inf.wrong } : null,
   };
 }
+
+// Effect hints: direction and size of a choice's effect, never numbers (see hints.ts).
+export { planHints, stampHints } from './hints';
+export type { Hint, LaterHint, PlanControl, PlanControlHints } from './hints';

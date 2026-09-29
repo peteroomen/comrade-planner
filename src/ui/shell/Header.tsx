@@ -16,8 +16,8 @@ export function Header({ ui, showBars = true }: { ui: UiState; showBars?: boolea
   // Leaning on a card shows the bars that choice would move; otherwise, every bar either could.
   const dots: BarDots = {};
   if (card) {
-    if (ui.lean) for (const b of card[ui.lean].hints) dots[b] = 'lean';
-    else for (const b of [...card.left.hints, ...card.right.hints]) dots[b] = 'hint';
+    if (ui.lean) for (const h of card[ui.lean].hints) dots[h.bar] = 'lean';
+    else for (const h of [...card.left.hints, ...card.right.hints]) dots[h.bar] = 'hint';
   }
 
   let phase: string;
