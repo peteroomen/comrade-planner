@@ -1,6 +1,6 @@
 # Milestone 2: implementation plan
 
-Status: **draft, awaiting Peter's approval.** Scope source: `docs/work/milestone-2.md` (the proposal) and `docs/work/playtest-feedback.md` items 1–8. This file turns the proposal into concrete, reviewable work packages. Anything not listed here stays out (see "Out of scope").
+Status: **approved by Peter (2026-09-29).** Scope source: `docs/work/milestone-2.md` (the proposal) and `docs/work/playtest-feedback.md` items 1–8. This file turns the proposal into concrete, reviewable work packages. Anything not listed here stays out (see "Out of scope").
 
 ## How it gets built
 
@@ -90,7 +90,7 @@ All new constants in `balance.ts`, one comment line each. Each rule gets a unit 
 
 Rival regions and migration scoring, the office log UI, the year-end review event, PC/laptop layout, starting map fog (the harness makes it modellable next), LLM planners, reform path.
 
-## Decisions I've assumed (say if any are wrong)
+## Decisions (confirmed by Peter)
 
 1. Office log and laptop layout wait for milestone 3, as the proposal says.
 2. Crackdown targets a town, not a road.
